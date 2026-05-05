@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { lookupCompany, formatCompanyNumber } from '@/lib/companies-house'
 import { sendVerificationAlert } from '@/lib/resend'
+import { geocodePostcode } from '@/lib/geocode'
 
 export async function submitVerification(formData: FormData) {
   const supabase = await createClient()
@@ -42,6 +43,9 @@ export async function submitVerification(formData: FormData) {
     redirect(`/verification?error=${encodeURIComponent(`${company.company_name} is listed as "${company.company_status}" on Companies House. Only active companies can register.`)}`)
   }
 
+  // Geocode the postcode so browse-by-distance works for this workshop
+  const coords = await geocodePostcode(postcode).catch(() => null)
+
   const { error } = await supabase
     .from('workshops')
     .update({
@@ -51,6 +55,8 @@ export async function submitVerification(formData: FormData) {
       town,
       county,
       postcode,
+      lat:                    coords?.lat ?? null,
+      lng:                    coords?.lng ?? null,
       verification_status:    'pending',
     })
     .eq('id', profile.workshop_id)

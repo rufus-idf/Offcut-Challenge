@@ -36,8 +36,14 @@ export type ListingImage = {
   created_at: string
 }
 
-// Used on browse page — joins workshop name, location and first image
+// Used on browse page — joins workshop name, location, coords and first image
 export type ListingWithWorkshop = Listing & {
-  workshops: { name: string; town: string | null; county: string | null }
+  workshops: {
+    name: string
+    town: string | null
+    county: string | null
+    lat: number | null
+    lng: number | null
+  }
   listing_images: { storage_path: string; position: number }[]
 }
