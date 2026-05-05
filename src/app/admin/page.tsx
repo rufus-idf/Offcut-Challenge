@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { approveWorkshop, rejectWorkshop } from './actions'
+import { approveWorkshop, rejectWorkshop, geocodeMissingWorkshops } from './actions'
 
 const ADMIN_EMAIL = 'rufus@i-designfurniture.com'
 
@@ -41,11 +41,21 @@ export default async function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-stone-900">Workshop applications</h1>
-          {pending.length > 0 && (
-            <p className="mt-1 text-sm text-amber-700">{pending.length} pending review</p>
-          )}
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-stone-900">Workshop applications</h1>
+            {pending.length > 0 && (
+              <p className="mt-1 text-sm text-amber-700">{pending.length} pending review</p>
+            )}
+          </div>
+          <form action={geocodeMissingWorkshops}>
+            <button
+              type="submit"
+              className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50"
+            >
+              Geocode missing locations
+            </button>
+          </form>
         </div>
 
         {!sorted.length ? (
