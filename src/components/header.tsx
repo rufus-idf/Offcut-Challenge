@@ -18,6 +18,9 @@ export function Header({ email, workshopName }: HeaderProps) {
             <Link href="/listings" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
               Browse
             </Link>
+            <Link href="/workshops" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+              Map
+            </Link>
             <Link href="/listings/new" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
               New listing
             </Link>
