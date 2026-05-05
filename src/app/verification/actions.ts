@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { lookupCompany, formatCompanyNumber } from '@/lib/companies-house'
+import { sendVerificationAlert } from '@/lib/resend'
 
 export async function submitVerification(formData: FormData) {
   const supabase = await createClient()
@@ -57,6 +58,9 @@ export async function submitVerification(formData: FormData) {
   if (error) {
     redirect(`/verification?error=${encodeURIComponent(error.message)}`)
   }
+
+  // Fire and forget — don't block the redirect if email fails
+  sendVerificationAlert(company.company_name, town, chNumber).catch(() => {})
 
   revalidatePath('/dashboard')
   redirect(`/dashboard?message=${encodeURIComponent('Application submitted — we will review it within 1 business day')}`)
