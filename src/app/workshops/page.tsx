@@ -1,17 +1,7 @@
-import dynamic from 'next/dynamic'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
-
-// Leaflet uses window/document — must be loaded client-side only
-const WorkshopMap = dynamic(() => import('@/components/workshop-map'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center text-sm text-stone-400">
-      Loading map…
-    </div>
-  ),
-})
+import { WorkshopMapLoader } from '@/components/workshop-map-loader'
 
 export default async function WorkshopsPage() {
   const supabase = await createClient()
@@ -52,7 +42,7 @@ export default async function WorkshopsPage() {
           className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
           style={{ height: '620px' }}
         >
-          <WorkshopMap workshops={(workshops ?? []) as { id: string; name: string; town: string | null; county: string | null; lat: number; lng: number }[]} />
+          <WorkshopMapLoader workshops={(workshops ?? []) as { id: string; name: string; town: string | null; county: string | null; lat: number; lng: number }[]} />
         </div>
 
         {count === 0 && (
