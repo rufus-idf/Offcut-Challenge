@@ -10,7 +10,7 @@ import type { ListingWithWorkshop } from '@/lib/types'
 export default async function BrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; material?: string; finish?: string; max_price?: string }>
+  searchParams: Promise<{ category?: string; material?: string; finish?: string; max_price?: string; town?: string }>
 }) {
   const filters = await searchParams
 
@@ -26,20 +26,43 @@ export default async function BrowsePage({
 
   if (!profile?.workshop_id) redirect('/onboarding')
 
+  // If filtering by town, resolve workshop IDs first (PostgREST can't filter on joined cols)
+  let workshopIdsForTown: string[] | null = null
+  if (filters.town) {
+    const { data: ws } = await supabase
+      .from('workshops')
+      .select('id')
+      .eq('town', filters.town)
+      .eq('verification_status', 'approved')
+    workshopIdsForTown = ws?.map(w => w.id) ?? []
+  }
+
   let query = supabase
     .from('listings')
-    .select('*, workshops(name), listing_images(storage_path, position)')
+    .select('*, workshops(name, town, county), listing_images(storage_path, position)')
     .eq('status', 'active')
 
   if (filters.category)  query = query.eq('category', filters.category)
   if (filters.material)  query = query.eq('material', filters.material)
   if (filters.finish)    query = query.eq('finish', filters.finish)
   if (filters.max_price) query = query.lte('price_pence', Math.round(parseFloat(filters.max_price) * 100))
+  if (workshopIdsForTown !== null) {
+    query = workshopIdsForTown.length
+      ? query.in('workshop_id', workshopIdsForTown)
+      : query.in('workshop_id', ['00000000-0000-0000-0000-000000000000']) // no match
+  }
 
   const { data: listings } = await query.order('created_at', { ascending: false })
 
+  // Unique towns from current results for the filter dropdown
+  const towns = [...new Set(
+    (listings ?? [])
+      .map(l => (l.workshops as { town: string | null }).town)
+      .filter((t): t is string => !!t)
+  )].sort()
+
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
-  const hasFilters = !!(filters.category || filters.material || filters.finish || filters.max_price)
+  const hasFilters = !!(filters.category || filters.material || filters.finish || filters.max_price || filters.town)
 
   const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
 
@@ -95,6 +118,14 @@ export default async function BrowsePage({
               placeholder="Any"
               className={`${selectClass} w-28`}
             />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-stone-500">Location</label>
+            <select name="town" defaultValue={filters.town ?? ''} className={selectClass}>
+              <option value="">All locations</option>
+              {towns.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
 
           <button type="submit" className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700">
@@ -166,7 +197,12 @@ export default async function BrowsePage({
                     </p>
                     <p className="mt-0.5 text-sm text-stone-400">Qty: {listing.quantity}</p>
                     <div className="mt-3 flex items-center justify-between">
-                      <p className="text-xs text-stone-400">{listing.workshops.name}</p>
+                      <div>
+                        <p className="text-xs text-stone-400">{listing.workshops.name}</p>
+                        {listing.workshops.town && (
+                          <p className="text-xs text-stone-400">{listing.workshops.town}{listing.workshops.county ? `, ${listing.workshops.county}` : ''}</p>
+                        )}
+                      </div>
                       <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
                     </div>
                   </div>

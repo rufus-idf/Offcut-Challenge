@@ -19,7 +19,7 @@ type ListingDetail = {
   price_pence: number
   description: string | null
   status: string
-  workshops: { name: string }
+  workshops: { name: string; town: string | null; county: string | null }
   listing_images: { id: string; storage_path: string; position: number }[]
 }
 
@@ -40,7 +40,7 @@ export default async function ListingPage({
   const [{ data: listing }, { data: profile }] = await Promise.all([
     supabase
       .from('listings')
-      .select('*, workshops(name), listing_images(id, storage_path, position)')
+      .select('*, workshops(name, town, county), listing_images(id, storage_path, position)')
       .eq('id', id)
       .single(),
     supabase
@@ -185,6 +185,14 @@ export default async function ListingPage({
                   <dt className="text-stone-500">Sold by</dt>
                   <dd className="font-medium text-stone-900">{typedListing.workshops.name}</dd>
                 </div>
+                {typedListing.workshops.town && (
+                  <div className="flex justify-between py-2.5">
+                    <dt className="text-stone-500">Ships from</dt>
+                    <dd className="font-medium text-stone-900">
+                      {[typedListing.workshops.town, typedListing.workshops.county].filter(Boolean).join(', ')}
+                    </dd>
+                  </div>
+                )}
               </dl>
 
               {typedListing.description && (

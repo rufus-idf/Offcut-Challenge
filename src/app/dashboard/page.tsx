@@ -5,7 +5,7 @@ import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
 import type { Listing } from '@/lib/types'
 
-const STATUS_STYLES: Record<Listing['status'], string> = {
+const LISTING_STATUS_STYLES: Record<Listing['status'], string> = {
   active:   'bg-green-50 text-green-700',
   sold:     'bg-stone-100 text-stone-500',
   archived: 'bg-stone-100 text-stone-500',
@@ -13,24 +13,36 @@ const STATUS_STYLES: Record<Listing['status'], string> = {
 
 type ListingWithImageCount = Listing & { listing_images: { id: string }[] }
 
-export default async function DashboardPage() {
+type WorkshopDetails = {
+  id: string
+  name: string
+  verification_status: string
+  rejection_reason: string | null
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ message?: string }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('workshop_id, workshops(id, name)')
+    .select('workshop_id, workshops(id, name, verification_status, rejection_reason)')
     .eq('id', user.id)
     .single()
 
   if (!profile?.workshop_id) redirect('/onboarding')
 
-  const workshop = profile.workshops as unknown as { id: string; name: string } | null
+  const workshop = profile.workshops as unknown as WorkshopDetails | null
+  const { message } = await searchParams
 
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, material, finish, length_mm, width_mm, thickness_mm, quantity, price_pence, status, created_at, listing_images(id)')
+    .select('id, category, material, finish, length_mm, width_mm, thickness_mm, quantity, price_pence, status, created_at, listing_images(id)')
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
 
@@ -39,28 +51,74 @@ export default async function DashboardPage() {
       <Header email={user.email!} workshopName={workshop?.name} />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
+
+        {/* Verification status banner */}
+        {workshop?.verification_status === 'unverified' && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">Verification required.</span> Submit your Companies House details to start listing offcuts.
+            </p>
+            <Link href="/verification" className="ml-4 shrink-0 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
+              Verify now
+            </Link>
+          </div>
+        )}
+
+        {workshop?.verification_status === 'pending' && (
+          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">Application under review.</span> We aim to respond within 1 business day. You'll be able to post listings once approved.
+            </p>
+          </div>
+        )}
+
+        {workshop?.verification_status === 'rejected' && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+            <div>
+              <p className="text-sm font-semibold text-red-800">Application not approved</p>
+              {workshop.rejection_reason && (
+                <p className="mt-0.5 text-sm text-red-700">{workshop.rejection_reason}</p>
+              )}
+            </div>
+            <Link href="/verification" className="ml-4 shrink-0 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">
+              Resubmit
+            </Link>
+          </div>
+        )}
+
+        {message && (
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4">
+            <p className="text-sm text-green-800">{message}</p>
+          </div>
+        )}
+
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-stone-900">{workshop?.name}</h1>
             <p className="mt-1 text-sm text-stone-500">Your listings</p>
           </div>
-          <Link
-            href="/listings/new"
-            className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
-          >
-            + New listing
-          </Link>
+          {workshop?.verification_status === 'approved' && (
+            <Link
+              href="/listings/new"
+              className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
+            >
+              + New listing
+            </Link>
+          )}
         </div>
 
         {!listings?.length ? (
           <div className="rounded-xl border border-dashed border-stone-300 bg-white py-20 text-center">
-            <p className="mb-4 text-stone-500">No listings yet.</p>
-            <Link
-              href="/listings/new"
-              className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800"
-            >
-              Post your first listing
-            </Link>
+            <p className="mb-4 text-stone-500">
+              {workshop?.verification_status === 'approved'
+                ? 'No listings yet.'
+                : 'Complete verification to start posting listings.'}
+            </p>
+            {workshop?.verification_status === 'approved' && (
+              <Link href="/listings/new" className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
+                Post your first listing
+              </Link>
+            )}
           </div>
         ) : (
           <div className="rounded-xl border border-stone-200 bg-white shadow-sm">
@@ -90,17 +148,14 @@ export default async function DashboardPage() {
                       {formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}
                     </td>
                     <td className="px-5 py-3 text-stone-600">{listing.quantity}</td>
-                    <td className="px-5 py-3 font-medium text-stone-900">
-                      {formatPrice(listing.price_pence)}
-                    </td>
+                    <td className="px-5 py-3 font-medium text-stone-900">{formatPrice(listing.price_pence)}</td>
                     <td className="px-5 py-3 text-stone-500">
                       {listing.listing_images.length > 0
                         ? `${listing.listing_images.length} photo${listing.listing_images.length !== 1 ? 's' : ''}`
-                        : <span className="text-stone-300">None</span>
-                      }
+                        : <span className="text-stone-300">None</span>}
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[listing.status]}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${LISTING_STATUS_STYLES[listing.status]}`}>
                         {listing.status}
                       </span>
                     </td>
