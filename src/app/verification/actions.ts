@@ -59,5 +59,5 @@ export async function submitVerification(formData: FormData) {
   }
 
   revalidatePath('/dashboard')
-  redirect('/dashboard?message=Application+submitted+—+we+will+review+it+within+1+business+day')
+  redirect(`/dashboard?message=${encodeURIComponent('Application submitted — we will review it within 1 business day')}`)
 }
