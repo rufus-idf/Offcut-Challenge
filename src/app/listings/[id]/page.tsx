@@ -9,6 +9,7 @@ import { uploadImage, deleteImage } from './actions'
 type ListingDetail = {
   id: string
   workshop_id: string
+  category: string
   material: string
   finish: string
   length_mm: number
@@ -166,6 +167,10 @@ export default async function ListingPage({
               </div>
 
               <dl className="divide-y divide-stone-100 text-sm">
+                <div className="flex justify-between py-2.5">
+                  <dt className="text-stone-500">Category</dt>
+                  <dd className="font-medium text-stone-900">{typedListing.category}</dd>
+                </div>
                 <div className="flex justify-between py-2.5">
                   <dt className="text-stone-500">Dimensions</dt>
                   <dd className="font-medium text-stone-900">

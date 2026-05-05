@@ -4,13 +4,13 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl } from '@/lib/format'
-import { MATERIALS, FINISHES } from '@/lib/constants'
+import { CATEGORIES, ALL_MATERIALS, ALL_FINISHES } from '@/lib/constants'
 import type { ListingWithWorkshop } from '@/lib/types'
 
 export default async function BrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ material?: string; finish?: string; max_price?: string }>
+  searchParams: Promise<{ category?: string; material?: string; finish?: string; max_price?: string }>
 }) {
   const filters = await searchParams
 
@@ -31,16 +31,15 @@ export default async function BrowsePage({
     .select('*, workshops(name), listing_images(storage_path, position)')
     .eq('status', 'active')
 
-  if (filters.material) query = query.eq('material', filters.material)
-  if (filters.finish)   query = query.eq('finish', filters.finish)
-  if (filters.max_price) {
-    query = query.lte('price_pence', Math.round(parseFloat(filters.max_price) * 100))
-  }
+  if (filters.category)  query = query.eq('category', filters.category)
+  if (filters.material)  query = query.eq('material', filters.material)
+  if (filters.finish)    query = query.eq('finish', filters.finish)
+  if (filters.max_price) query = query.lte('price_pence', Math.round(parseFloat(filters.max_price) * 100))
 
   const { data: listings } = await query.order('created_at', { ascending: false })
 
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
-  const hasFilters = !!(filters.material || filters.finish || filters.max_price)
+  const hasFilters = !!(filters.category || filters.material || filters.finish || filters.max_price)
 
   const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
 
@@ -62,10 +61,18 @@ export default async function BrowsePage({
         {/* Filters */}
         <form method="get" className="mb-8 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4">
           <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-stone-500">Category</label>
+            <select name="category" defaultValue={filters.category ?? ''} className={selectClass}>
+              <option value="">All categories</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-stone-500">Material</label>
             <select name="material" defaultValue={filters.material ?? ''} className={selectClass}>
               <option value="">All materials</option>
-              {MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
+              {ALL_MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
 
@@ -73,7 +80,7 @@ export default async function BrowsePage({
             <label className="text-xs font-medium text-stone-500">Finish</label>
             <select name="finish" defaultValue={filters.finish ?? ''} className={selectClass}>
               <option value="">All finishes</option>
-              {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
+              {ALL_FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
 
@@ -90,10 +97,7 @@ export default async function BrowsePage({
             />
           </div>
 
-          <button
-            type="submit"
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700"
-          >
+          <button type="submit" className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700">
             Filter
           </button>
 
@@ -130,20 +134,20 @@ export default async function BrowsePage({
                 <Link
                   key={listing.id}
                   href={`/listings/${listing.id}`}
-                  className="group rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md"
                 >
-                  {/* Image or placeholder */}
                   <div className="relative aspect-[4/3] bg-stone-100">
                     {firstImage ? (
                       <Image
                         src={getImageUrl(firstImage.storage_path)}
                         alt={`${listing.material} ${listing.finish}`}
                         fill
-                        className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center">
+                      <div className="flex h-full flex-col items-center justify-center gap-1">
+                        <span className="text-xs font-medium uppercase tracking-wide text-stone-400">{listing.category}</span>
                         <span className="text-sm text-stone-400">{listing.material}</span>
                       </div>
                     )}
@@ -161,7 +165,10 @@ export default async function BrowsePage({
                       {formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}
                     </p>
                     <p className="mt-0.5 text-sm text-stone-400">Qty: {listing.quantity}</p>
-                    <p className="mt-3 text-xs text-stone-400">{listing.workshops.name}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-xs text-stone-400">{listing.workshops.name}</p>
+                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
+                    </div>
                   </div>
                 </Link>
               )

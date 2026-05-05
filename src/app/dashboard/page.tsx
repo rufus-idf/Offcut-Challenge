@@ -67,6 +67,7 @@ export default async function DashboardPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-stone-100 text-left text-xs font-medium uppercase tracking-wide text-stone-400">
+                  <th className="px-5 py-3">Category</th>
                   <th className="px-5 py-3">Material</th>
                   <th className="px-5 py-3">Dimensions</th>
                   <th className="px-5 py-3">Qty</th>
@@ -78,6 +79,7 @@ export default async function DashboardPage() {
               <tbody className="divide-y divide-stone-100">
                 {(listings as ListingWithImageCount[]).map(listing => (
                   <tr key={listing.id} className="hover:bg-stone-50">
+                    <td className="px-5 py-3 text-stone-600">{listing.category}</td>
                     <td className="px-5 py-3">
                       <Link href={`/listings/${listing.id}`} className="hover:underline">
                         <p className="font-medium text-stone-900">{listing.material}</p>

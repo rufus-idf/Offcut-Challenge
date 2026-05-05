@@ -15,6 +15,7 @@ export type Profile = {
 export type Listing = {
   id: string
   workshop_id: string
+  category: string
   material: string
   finish: string
   length_mm: number

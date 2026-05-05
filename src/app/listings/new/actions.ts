@@ -25,6 +25,7 @@ export async function createListing(formData: FormData) {
 
   const { data, error } = await supabase.from('listings').insert({
     workshop_id: profile.workshop_id,
+    category:     formData.get('category') as string,
     material:     formData.get('material') as string,
     finish:       formData.get('finish') as string,
     length_mm:    parseInt(formData.get('length_mm') as string, 10),
