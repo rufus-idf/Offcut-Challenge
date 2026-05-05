@@ -11,6 +11,8 @@ const STATUS_STYLES: Record<Listing['status'], string> = {
   archived: 'bg-stone-100 text-stone-500',
 }
 
+type ListingWithImageCount = Listing & { listing_images: { id: string }[] }
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -22,14 +24,13 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  // No workshop yet — send them through onboarding
   if (!profile?.workshop_id) redirect('/onboarding')
 
   const workshop = profile.workshops as unknown as { id: string; name: string } | null
 
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, material, finish, length_mm, width_mm, thickness_mm, quantity, price_pence, status, created_at')
+    .select('id, material, finish, length_mm, width_mm, thickness_mm, quantity, price_pence, status, created_at, listing_images(id)')
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
 
@@ -70,15 +71,18 @@ export default async function DashboardPage() {
                   <th className="px-5 py-3">Dimensions</th>
                   <th className="px-5 py-3">Qty</th>
                   <th className="px-5 py-3">Price</th>
+                  <th className="px-5 py-3">Photos</th>
                   <th className="px-5 py-3">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {(listings as Listing[]).map(listing => (
+                {(listings as ListingWithImageCount[]).map(listing => (
                   <tr key={listing.id} className="hover:bg-stone-50">
                     <td className="px-5 py-3">
-                      <p className="font-medium text-stone-900">{listing.material}</p>
-                      <p className="text-stone-400">{listing.finish}</p>
+                      <Link href={`/listings/${listing.id}`} className="hover:underline">
+                        <p className="font-medium text-stone-900">{listing.material}</p>
+                        <p className="text-stone-400">{listing.finish}</p>
+                      </Link>
                     </td>
                     <td className="px-5 py-3 text-stone-600">
                       {formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}
@@ -86,6 +90,12 @@ export default async function DashboardPage() {
                     <td className="px-5 py-3 text-stone-600">{listing.quantity}</td>
                     <td className="px-5 py-3 font-medium text-stone-900">
                       {formatPrice(listing.price_pence)}
+                    </td>
+                    <td className="px-5 py-3 text-stone-500">
+                      {listing.listing_images.length > 0
+                        ? `${listing.listing_images.length} photo${listing.listing_images.length !== 1 ? 's' : ''}`
+                        : <span className="text-stone-300">None</span>
+                      }
                     </td>
                     <td className="px-5 py-3">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[listing.status]}`}>

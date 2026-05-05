@@ -27,7 +27,16 @@ export type Listing = {
   created_at: string
 }
 
-// Used on the browse page where we join workshop name onto each listing
+export type ListingImage = {
+  id: string
+  listing_id: string
+  storage_path: string
+  position: number
+  created_at: string
+}
+
+// Used on browse page — joins workshop name and first image
 export type ListingWithWorkshop = Listing & {
   workshops: { name: string }
+  listing_images: { storage_path: string; position: number }[]
 }

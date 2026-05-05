@@ -23,7 +23,7 @@ export async function createListing(formData: FormData) {
 
   const description = (formData.get('description') as string).trim()
 
-  const { error } = await supabase.from('listings').insert({
+  const { data, error } = await supabase.from('listings').insert({
     workshop_id: profile.workshop_id,
     material:     formData.get('material') as string,
     finish:       formData.get('finish') as string,
@@ -33,7 +33,7 @@ export async function createListing(formData: FormData) {
     quantity:     parseInt(formData.get('quantity') as string, 10),
     price_pence:  pricePence,
     description:  description || null,
-  })
+  }).select('id').single()
 
   if (error) {
     redirect(`/listings/new?error=${encodeURIComponent(error.message)}`)
@@ -41,5 +41,5 @@ export async function createListing(formData: FormData) {
 
   revalidatePath('/dashboard')
   revalidatePath('/listings')
-  redirect('/dashboard')
+  redirect(`/listings/${data.id}`)
 }
