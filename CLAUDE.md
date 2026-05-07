@@ -34,6 +34,24 @@ Currently in active development — soft launch target is 5–10 real workshops.
 - Environment variables stored in .env.local (local) and Vercel dashboard (production)
 - Dynamic imports with ssr:false must live inside 'use client' files — Turbopack requirement
 
+## Database migration convention
+All SQL changes are saved in `supabase/migrations/` as numbered files before being given to the user to run.
+
+**Rule for all agents: whenever you write a SQL block for the user to run, you MUST also save it as a migration file first.**
+
+File naming: `NNN_short_description.sql` (e.g. `007_add_offers_table.sql`)
+Each file has a comment header explaining what it does and when it was run.
+
+Current migrations:
+- `001_initial_schema.sql` — workshops, profiles, listings, RLS, trigger
+- `002_listing_images.sql` — listing_images table and storage bucket
+- `003_categories.sql` — category column, expanded material/finish constraints
+- `004_verification.sql` — verification_status workflow, CH/VAT/location fields
+- `005_geocoding.sql` — lat/lng columns on workshops
+- `006_stock_items.sql` — stock_items table, stock_item_id on listings
+
+**Do NOT save one-off data operations** (DELETE, UPDATE on existing rows) as migrations — only save schema changes (CREATE TABLE, ALTER TABLE, CREATE POLICY etc.).
+
 ## Code style preferences
 - TypeScript strict mode
 - Server Components by default; Client Components only when needed
