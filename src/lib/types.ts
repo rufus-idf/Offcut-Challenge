@@ -1,3 +1,26 @@
+export type StockItem = {
+  id: string
+  workshop_id: string
+  source: 'manual' | 'camera'
+  shape_type: 'RECT' | 'L' | 'C' | 'POLY'
+  category: string
+  material: string
+  finish: string
+  length_mm: number | null
+  width_mm: number | null
+  thickness_mm: number
+  bbox_w_mm: number | null
+  bbox_h_mm: number | null
+  area_mm2: number | null
+  vertices_mm: number[][] | null
+  svg_path_data: string | null
+  quantity: number
+  description: string | null
+  notes: string | null
+  status: 'available' | 'listed' | 'sold' | 'used' | 'archived'
+  created_at: string
+}
+
 export type Workshop = {
   id: string
   name: string
@@ -15,6 +38,7 @@ export type Profile = {
 export type Listing = {
   id: string
   workshop_id: string
+  stock_item_id: string | null
   category: string
   material: string
   finish: string

@@ -3,15 +3,24 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
-import type { Listing } from '@/lib/types'
+import { markAsSold, archiveItem, relistItem } from './actions'
+import type { StockItem } from '@/lib/types'
 
-const LISTING_STATUS_STYLES: Record<Listing['status'], string> = {
-  active:   'bg-green-50 text-green-700',
-  sold:     'bg-stone-100 text-stone-500',
-  archived: 'bg-stone-100 text-stone-500',
+const STATUS_STYLES: Record<StockItem['status'], string> = {
+  available: 'bg-blue-50 text-blue-700',
+  listed:    'bg-green-50 text-green-700',
+  sold:      'bg-stone-100 text-stone-500',
+  used:      'bg-stone-100 text-stone-500',
+  archived:  'bg-stone-100 text-stone-500',
 }
 
-type ListingWithImageCount = Listing & { listing_images: { id: string }[] }
+const STATUS_LABELS: Record<StockItem['status'], string> = {
+  available: 'Available',
+  listed:    'Listed',
+  sold:      'Sold',
+  used:      'Used',
+  archived:  'Archived',
+}
 
 type WorkshopDetails = {
   id: string
@@ -20,10 +29,15 @@ type WorkshopDetails = {
   rejection_reason: string | null
 }
 
+// Stock item joined with its listing (if published)
+type StockWithListing = StockItem & {
+  listings: { id: string; price_pence: number; status: string } | null
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string }>
+  searchParams: Promise<{ message?: string; filter?: string }>
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -38,13 +52,30 @@ export default async function DashboardPage({
   if (!profile?.workshop_id) redirect('/onboarding')
 
   const workshop = profile.workshops as unknown as WorkshopDetails | null
-  const { message } = await searchParams
+  const { message, filter } = await searchParams
+  const activeFilter = filter ?? 'all'
 
-  const { data: listings } = await supabase
-    .from('listings')
-    .select('id, category, material, finish, length_mm, width_mm, thickness_mm, quantity, price_pence, status, created_at, listing_images(id)')
+  // Fetch stock items with their linked listing
+  let stockQuery = supabase
+    .from('stock_items')
+    .select('*, listings(id, price_pence, status)')
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
+
+  if (activeFilter === 'listed')   stockQuery = stockQuery.eq('status', 'listed')
+  if (activeFilter === 'available') stockQuery = stockQuery.eq('status', 'available')
+  if (activeFilter === 'sold')     stockQuery = stockQuery.eq('status', 'sold')
+  if (activeFilter === 'archived') stockQuery = stockQuery.eq('status', 'archived')
+
+  const { data: stockItems } = await stockQuery
+
+  const filterTabs = [
+    { key: 'all',       label: 'All' },
+    { key: 'listed',    label: 'Listed' },
+    { key: 'available', label: 'Available' },
+    { key: 'sold',      label: 'Sold' },
+    { key: 'archived',  label: 'Archived' },
+  ]
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -52,26 +83,26 @@ export default async function DashboardPage({
 
       <main className="mx-auto max-w-7xl px-6 py-10">
 
-        {/* Verification status banner */}
+        {/* Verification banners */}
         {workshop?.verification_status === 'unverified' && (
           <div className="mb-6 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
             <p className="text-sm text-amber-800">
-              <span className="font-semibold">Verification required.</span> Submit your Companies House details to start listing offcuts.
+              <span className="font-semibold">Verification required.</span>{' '}
+              Submit your Companies House details to start listing offcuts.
             </p>
             <Link href="/verification" className="ml-4 shrink-0 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
               Verify now
             </Link>
           </div>
         )}
-
         {workshop?.verification_status === 'pending' && (
           <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
             <p className="text-sm text-blue-800">
-              <span className="font-semibold">Application under review.</span> We aim to respond within 1 business day. You'll be able to post listings once approved.
+              <span className="font-semibold">Application under review.</span>{' '}
+              We aim to respond within 1 business day.
             </p>
           </div>
         )}
-
         {workshop?.verification_status === 'rejected' && (
           <div className="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-5 py-4">
             <div>
@@ -85,17 +116,17 @@ export default async function DashboardPage({
             </Link>
           </div>
         )}
-
         {message && (
           <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4">
             <p className="text-sm text-green-800">{message}</p>
           </div>
         )}
 
-        <div className="mb-8 flex items-center justify-between">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-stone-900">{workshop?.name}</h1>
-            <p className="mt-1 text-sm text-stone-500">Your listings</p>
+            <p className="mt-1 text-sm text-stone-500">Stock inventory</p>
           </div>
           {workshop?.verification_status === 'approved' && (
             <Link
@@ -107,16 +138,38 @@ export default async function DashboardPage({
           )}
         </div>
 
-        {!listings?.length ? (
+        {/* Filter tabs */}
+        {(stockItems?.length ?? 0) > 0 && (
+          <div className="mb-4 flex gap-1">
+            {filterTabs.map(tab => (
+              <Link
+                key={tab.key}
+                href={tab.key === 'all' ? '/dashboard' : `/dashboard?filter=${tab.key}`}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  activeFilter === tab.key
+                    ? 'bg-stone-900 text-white'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                {tab.label}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Stock table */}
+        {!stockItems?.length ? (
           <div className="rounded-xl border border-dashed border-stone-300 bg-white py-20 text-center">
             <p className="mb-4 text-stone-500">
-              {workshop?.verification_status === 'approved'
-                ? 'No listings yet.'
-                : 'Complete verification to start posting listings.'}
+              {activeFilter !== 'all'
+                ? `No ${activeFilter} items.`
+                : workshop?.verification_status === 'approved'
+                  ? 'No stock yet. Add your first listing.'
+                  : 'Complete verification to start adding stock.'}
             </p>
-            {workshop?.verification_status === 'approved' && (
+            {workshop?.verification_status === 'approved' && activeFilter === 'all' && (
               <Link href="/listings/new" className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
-                Post your first listing
+                Add your first listing
               </Link>
             )}
           </div>
@@ -125,42 +178,78 @@ export default async function DashboardPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-stone-100 text-left text-xs font-medium uppercase tracking-wide text-stone-400">
-                  <th className="px-5 py-3">Category</th>
-                  <th className="px-5 py-3">Material</th>
+                  <th className="px-5 py-3">Item</th>
                   <th className="px-5 py-3">Dimensions</th>
                   <th className="px-5 py-3">Qty</th>
                   <th className="px-5 py-3">Price</th>
-                  <th className="px-5 py-3">Photos</th>
                   <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {(listings as ListingWithImageCount[]).map(listing => (
-                  <tr key={listing.id} className="hover:bg-stone-50">
-                    <td className="px-5 py-3 text-stone-600">{listing.category}</td>
-                    <td className="px-5 py-3">
-                      <Link href={`/listings/${listing.id}`} className="hover:underline">
-                        <p className="font-medium text-stone-900">{listing.material}</p>
-                        <p className="text-stone-400">{listing.finish}</p>
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-stone-600">
-                      {formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}
-                    </td>
-                    <td className="px-5 py-3 text-stone-600">{listing.quantity}</td>
-                    <td className="px-5 py-3 font-medium text-stone-900">{formatPrice(listing.price_pence)}</td>
-                    <td className="px-5 py-3 text-stone-500">
-                      {listing.listing_images.length > 0
-                        ? `${listing.listing_images.length} photo${listing.listing_images.length !== 1 ? 's' : ''}`
-                        : <span className="text-stone-300">None</span>}
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${LISTING_STATUS_STYLES[listing.status]}`}>
-                        {listing.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {(stockItems as StockWithListing[]).map(item => {
+                  const listing = Array.isArray(item.listings) ? item.listings[0] : item.listings
+                  return (
+                    <tr key={item.id} className="hover:bg-stone-50">
+                      <td className="px-5 py-3">
+                        {listing ? (
+                          <Link href={`/listings/${listing.id}`} className="hover:underline">
+                            <p className="font-medium text-stone-900">{item.material}</p>
+                            <p className="text-stone-400">{item.finish}</p>
+                          </Link>
+                        ) : (
+                          <>
+                            <p className="font-medium text-stone-900">{item.material}</p>
+                            <p className="text-stone-400">{item.finish}</p>
+                          </>
+                        )}
+                        <p className="text-xs text-stone-400">{item.category}</p>
+                      </td>
+                      <td className="px-5 py-3 text-stone-600">
+                        {item.length_mm && item.width_mm
+                          ? formatDimensions(item.length_mm, item.width_mm, item.thickness_mm)
+                          : `${item.bbox_w_mm} × ${item.bbox_h_mm} × ${item.thickness_mm}mm`}
+                      </td>
+                      <td className="px-5 py-3 text-stone-600">{item.quantity}</td>
+                      <td className="px-5 py-3 font-medium text-stone-900">
+                        {listing ? formatPrice(listing.price_pence) : '—'}
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[item.status]}`}>
+                          {STATUS_LABELS[item.status]}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          {listing && item.status === 'listed' && (
+                            <>
+                              <Link href={`/listings/${listing.id}`} className="text-xs text-stone-500 hover:text-stone-700">
+                                View
+                              </Link>
+                              <form action={markAsSold.bind(null, item.id, listing.id)}>
+                                <button type="submit" className="text-xs text-amber-700 hover:text-amber-900">
+                                  Mark sold
+                                </button>
+                              </form>
+                              <form action={archiveItem.bind(null, item.id, listing.id)}>
+                                <button type="submit" className="text-xs text-stone-400 hover:text-stone-600">
+                                  Archive
+                                </button>
+                              </form>
+                            </>
+                          )}
+                          {listing && (item.status === 'sold' || item.status === 'archived') && (
+                            <form action={relistItem.bind(null, item.id, listing.id)}>
+                              <button type="submit" className="text-xs text-green-700 hover:text-green-900">
+                                Relist
+                              </button>
+                            </form>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

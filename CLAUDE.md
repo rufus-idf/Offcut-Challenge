@@ -6,10 +6,10 @@ Public-facing name: "Offcut Challenge". Project/code name: offcut-challenge.
 Currently in active development — soft launch target is 5–10 real workshops.
 
 ## Business model
-- £29/month flat subscription for verified workshops to access the platform
+- £29/month flat subscription (single tier) — includes marketplace access AND private stock tracking
 - 5% transaction fee on each sale between workshops (taken automatically via Stripe Connect)
 - Verified business accounts only (Companies House check + manual admin approval)
-- Planned add-on: camera app integration for automated stock capture (see Camera App section below)
+- Camera app is a separate purchasable product (see Camera App section) — not included in £29/mo
 
 ## Live URLs
 - Production: https://offcut-challenge.vercel.app
@@ -43,6 +43,42 @@ Currently in active development — soft launch target is 5–10 real workshops.
 
 ---
 
+## Core architecture: Stock → Marketplace
+
+### The two-layer model
+Every offcut exists in two possible states:
+
+**Stock** (private, per workshop)
+- Everything a workshop has — scanned via camera OR manually entered
+- Never visible to other workshops
+- Workshops manage their full inventory here
+- Statuses: available / listed / sold / used / archived
+
+**Marketplace listing** (public)
+- A curated subset of stock the workshop has chosen to sell
+- Linked back to its stock item
+- Visible to all verified workshops on the browse page
+
+### How items flow
+```
+Camera scan → stock_item (draft, available)
+                    ↓ workshop reviews
+              publish to marketplace → listing (active, public)
+
+Manual entry → stock_item (available) + listing (active)  [created together, published immediately]
+                    ↓ when sold
+              stock_item.status = sold, listing.status = sold
+```
+
+### Key decisions
+- **Manual rectangular listings** auto-publish to the marketplace in one step (no separate publish action needed). The stock item is created silently underneath.
+- **Camera scans** land in stock first as drafts, workshop reviews and publishes separately. (Camera integration not yet built.)
+- **Price belongs to the listing**, not the stock item. Stock tracks what you have; listings track what you're selling and for how much.
+- **Manual listings are rectangular only** (length × width × thickness). Camera adds support for L, C, and POLY shapes.
+- The stock layer uses a camera-ready schema from day one — shape columns (vertices_mm, svg_path_data etc.) are present but null for manual entries.
+
+---
+
 ## Database schema (Supabase)
 
 ### workshops
@@ -51,17 +87,17 @@ Currently in active development — soft launch target is 5–10 real workshops.
 | id | uuid | PK |
 | name | text | Workshop display name |
 | slug | text | Unique URL slug |
-| companies_house_number | text | 8-char CH number |
-| companies_house_name | text | Name returned by CH API |
+| companies_house_number | text | |
+| companies_house_name | text | Returned by CH API |
 | vat_number | text | Optional |
 | town | text | Shipping location |
 | county | text | |
 | postcode | text | Full postcode |
-| lat | float8 | Geocoded from postcode via postcodes.io |
-| lng | float8 | Geocoded from postcode via postcodes.io |
+| lat | float8 | Geocoded via postcodes.io |
+| lng | float8 | Geocoded via postcodes.io |
 | verification_status | text | unverified / pending / approved / rejected |
-| rejection_reason | text | Set by admin on rejection |
-| verified_at | timestamptz | Set on approval |
+| rejection_reason | text | |
+| verified_at | timestamptz | |
 | created_at | timestamptz | |
 
 ### profiles
@@ -73,20 +109,49 @@ Currently in active development — soft launch target is 5–10 real workshops.
 
 Auto-created via DB trigger on auth.users insert.
 
-### listings
+### stock_items
+The canonical inventory record. Every offcut — whether from camera or manual entry — lives here first.
+
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK |
 | workshop_id | uuid | FK → workshops |
+| source | text | 'manual' or 'camera' |
+| shape_type | text | RECT / L / C / POLY |
 | category | text | Wood / Metal / Plastic / Other |
-| material | text | See constants.ts |
-| finish | text | See constants.ts |
+| material | text | |
+| finish | text | |
+| length_mm | integer | Rectangular pieces only |
+| width_mm | integer | Rectangular pieces only |
+| thickness_mm | integer | |
+| bbox_w_mm | float | Bounding box — same as length_mm for RECT |
+| bbox_h_mm | float | Bounding box — same as width_mm for RECT |
+| area_mm2 | float | length × width for RECT; true polygon area for shapes |
+| vertices_mm | jsonb | [[x,y],...] in mm — null for manual RECT entries |
+| svg_path_data | text | SVG path string — null for manual RECT entries |
+| quantity | integer | |
+| description | text | Optional |
+| notes | text | Optional, camera operator notes |
+| status | text | available / listed / sold / used / archived |
+| created_at | timestamptz | |
+
+### listings
+The public marketplace record. Always linked to a stock_item (for new entries).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PK |
+| workshop_id | uuid | FK → workshops |
+| stock_item_id | uuid | FK → stock_items (null for pre-migration legacy listings) |
+| category | text | |
+| material | text | |
+| finish | text | |
 | length_mm | integer | |
 | width_mm | integer | |
 | thickness_mm | integer | |
 | quantity | integer | |
-| price_pence | integer | Stored as pence to avoid float issues |
-| description | text | Optional |
+| price_pence | integer | Stored as pence |
+| description | text | |
 | status | text | active / sold / archived |
 | created_at | timestamptz | |
 
@@ -95,7 +160,7 @@ Auto-created via DB trigger on auth.users insert.
 |---|---|---|
 | id | uuid | PK |
 | listing_id | uuid | FK → listings |
-| storage_path | text | Path in Supabase Storage bucket 'listing-images' |
+| storage_path | text | Path in Supabase Storage 'listing-images' bucket |
 | position | integer | Display order |
 | created_at | timestamptz | |
 
@@ -121,30 +186,18 @@ Finishes: Raw / unfinished, Coated, Treated
 
 ---
 
-## Core entities
-- **Workshops**: business accounts, verified via Companies House, have a subscription, can list and buy
-- **Users**: individuals belonging to a workshop (multi-user invite system not yet built — workaround: share login)
-- **Listings**: material offcuts with category, dimensions, price, photos, status
-- **Listing images**: photos stored in Supabase Storage, displayed on browse cards and detail page
-- **Offers**: buyer proposes alternate price — NOT YET BUILT
-- **Transactions**: completed purchases with 5% fee — NOT YET BUILT
-- **Subscriptions**: per-workshop monthly Stripe subscription — NOT YET BUILT
-- **Messages**: buyer-seller communication — NOT YET BUILT
-
----
-
 ## Key pages and routes
 
 | Route | Description |
 |---|---|
 | / | Public landing page |
 | /auth/login | Email/password login |
-| /auth/signup | Sign up — triggers onboarding after |
+| /auth/signup | Sign up |
 | /onboarding | Create workshop name (required after signup) |
 | /verification | Submit CH number, VAT, location for approval |
-| /dashboard | Workshop's own listings, verification status banner |
-| /listings | Browse all active listings with filters |
-| /listings/new | Create a listing (approved workshops only) |
+| /dashboard | Stock inventory + verification status banner |
+| /listings | Browse all active marketplace listings with filters |
+| /listings/new | Add item to stock and publish to marketplace immediately |
 | /listings/[id] | Listing detail, photo upload (owner only) |
 | /workshops | UK map of all approved workshops (Leaflet) |
 | /admin | Admin panel — rufus@i-designfurniture.com only |
@@ -154,134 +207,103 @@ Finishes: Raw / unfinished, Coated, Treated
 ## What's been built (completed)
 
 ### Week 1 — Foundation
-- Next.js 15 project with Tailwind v4 and TypeScript
-- Supabase auth (email/password signup, login, logout, session refresh via middleware)
-- Protected /dashboard — server-side auth check
-- Deployed to Vercel with GitHub auto-deploy
+- Next.js 15 project, Supabase auth, protected routes, deployed to Vercel
 
 ### Week 2 — Database and listings
-- Supabase schema: workshops, profiles, listings tables with RLS policies
-- DB trigger auto-creates profile on signup
-- Workshop onboarding flow (/onboarding)
-- Create listing form (/listings/new) with Server Action
-- Browse page (/listings) with listing cards
-- Dashboard shows workshop's own listings in a table
+- Schema: workshops, profiles, listings + RLS
+- Workshop onboarding, create/browse listings, dashboard
 
 ### Week 3 — Photos, search, filters
-- Supabase Storage bucket 'listing-images' for listing photos
-- Photo upload on listing detail page (owner only, JPEG/PNG/WebP, max 5MB)
-- Browse filters: category, material, finish, max price, location (town), postcode distance
-- Distance sorting using postcodes.io geocoding + Haversine formula
-- Browse cards show first photo with hover effect
-- Listing detail page with photo gallery and info panel
+- Supabase Storage for listing photos (5MB, JPEG/PNG/WebP)
+- Browse filters: category, material, finish, max price, location, postcode distance sort
+- Listing detail page with photo gallery
 
-### Week 4 — Verification and admin
-- Companies House REST API integration (Basic Auth, server-side)
-- /verification form: CH number, VAT, town, county, postcode
-- verification_status workflow: unverified → pending → approved → rejected
-- /admin panel: list all workshops, approve/reject with reason
-- Admin protected by email check (404 for non-admins)
-- Dashboard banners for each verification state
-- New listing gated behind approved status
-- Location stored and geocoded at verification time (lat/lng via postcodes.io)
-- Workshop map at /workshops using Leaflet + OpenStreetMap
-- Resend email alert to admin when a workshop submits for verification
+### Week 4 — Verification, admin, map
+- Companies House API verification
+- /verification form and /admin approval panel
+- Workshop map (Leaflet + OpenStreetMap)
+- Resend email alert on verification submission
+- Location geocoding (postcodes.io), distance sorting
+
+### Stock/marketplace split (in progress)
+- stock_items table as canonical inventory
+- Manual listings create stock_item + listing together (auto-published)
+- Dashboard shows stock inventory with sold/archive actions
+- Camera-ready schema columns present on stock_items from day one
 
 ---
 
 ## What's next
 
-### Immediate (before Stripe)
-- Mark listing as sold / archive listing (functional gap — no way to update status currently)
+### Immediate
+- Finish stock/marketplace split (in progress)
 - Edit a listing after creation
-- Workshop profile page (/workshops/[slug]) showing all their active listings
+- Workshop profile page (/workshops/[slug])
 
 ### Week 5 — Stripe Subscriptions
-- Stripe account needed (register as sole trader or Ltd company)
-- Apply for Stripe Connect platform access in Stripe dashboard
-- £29/month subscription gate — workshops can't access marketplace without active subscription
-- Stripe Checkout for payment
-- Webhook handling for subscription lifecycle (created, cancelled, payment failed)
-- subscription_status stored on workshops table
+- Register Stripe account (sole trader or Ltd company)
+- Apply for Stripe Connect platform access
+- £29/month subscription gate
+- Stripe Checkout + webhook handling
+- subscription_status on workshops table
 
 ### Week 6 — Stripe Connect (marketplace transactions)
-- Seller onboarding with Stripe Express (workshops connect their own bank account)
-- Buy button on listing detail page
-- Payment splits automatically: 95% to seller, 5% to platform
-- Transactions recorded in database
-- Depends on Week 5 being solid first
+- Seller Stripe Express onboarding
+- Buy button + Stripe payment
+- Automatic 95/5 split
+- Transaction records in DB
 
 ### Week 7 — Messaging, emails, polish
-- Buyer-seller messaging (stored in DB)
-- Transactional emails via Resend (listing sold, new message, offer received)
-- Multi-user workshop invites (currently one login per workshop)
+- Buyer-seller messaging
+- Transactional emails via Resend
+- Multi-user workshop invites
 - Mobile layout improvements
-- Price sort option on browse page
 
 ### Week 8 — Soft launch
 - Invite 5–10 real workshops
-- Monitor, fix issues, gather feedback
 
 ---
 
 ## Camera app integration (planned — not yet built)
 
+### Product model
+The camera app is a separate purchasable product with two output options:
+1. **Push to Google Sheets** — standalone, no Offcut Challenge subscription needed
+2. **Push to Supabase** — add-on integration, requires Offcut Challenge subscription
+
+Stripe billing for camera app packages to be designed separately.
+
 ### What the camera app is
-A separate Python desktop application (PySide6, Windows EXE) that sits above a CNC bed.
-Uses a camera (Intel RealSense depth camera or USB 2D camera) and OpenCV computer vision
-to detect and measure offcut shapes automatically. Currently saves to Google Sheets.
-The intention is to replace/supplement the Google Sheets output with direct Supabase integration.
+A Python desktop application (PySide6, Windows EXE) with OpenCV computer vision.
+Sits above a CNC bed, detects and measures offcut shapes using an Intel RealSense
+depth camera or USB 2D camera. Currently saves to Google Sheets.
 
 ### What data it captures per offcut
-- `shape_type`: RECT / L / C / POLY (classified by vertex count)
-- `vertices_mm`: polygon as `[[x,y], ...]` in mm relative to bed origin — the canonical geometry
-- `svg_path_data`: SVG path string derived from vertices — ready to render in browser
+- `shape_type`: RECT / L / C / POLY (classified by vertex count: 4/6/8/other)
+- `vertices_mm`: polygon as `[[x,y], ...]` in mm — the canonical geometry
+- `svg_path_data`: SVG path string — ready to render in browser
 - `area_mm2`: true polygon area
 - `bbox_w_mm`, `bbox_h_mm`: bounding box dimensions
-- `thickness_mm`: auto-measured from depth camera (P95 height above bed)
-- `material`, `qty`, `grade`, `notes`: operator-entered at save time
-- Confidence score: HIGH / MEDIUM / LOW with specific issue descriptions
+- `thickness_mm`: auto-measured from depth camera
+- `material`, `qty`, `notes`: operator-entered at save time
+- `confidence`: HIGH / MEDIUM / LOW with issue descriptions
 
-### How the push currently works
-Operator clicks "Save + Push to Google Sheets" → desktop app POSTs a JSON bundle
-to a Google Apps Script /exec URL via urllib.request. The Apps Script writes to 4 sheet tabs.
-Integration path: add a second POST destination in post_workshop_bundle() pointing to a
-Next.js API route. Estimated change to camera app: ~10 lines of Python.
+### Integration path
+Current push: desktop app → POST JSON bundle → Google Apps Script → 4 sheet tabs
+Integration: add second POST destination in post_workshop_bundle() → Next.js API route → stock_items table
+Estimated camera app change: ~10 lines of Python
 
-### What the Supabase schema needs to support shapes
-The current listings table assumes rectangles (length_mm, width_mm, thickness_mm).
-New columns needed (additive — doesn't break existing rectangular listings):
-- `shape_type` text (RECT / L / C / POLY)
-- `vertices_mm` jsonb ([[x,y],...])
-- `svg_path_data` text
-- `area_mm2` float
-- `bbox_w_mm` float
-- `bbox_h_mm` float
-- `source` text ('manual' or 'camera')
+Camera scans land in stock_items as 'available' (draft).
+Workshop reviews in dashboard, clicks "Publish to marketplace" → creates listing with price.
 
-For rectangular camera scans: bbox_w_mm and bbox_h_mm map to existing length_mm/width_mm.
-For L, C, POLY shapes: bounding box gives rough size, SVG gives true shape for display.
-
-### What the app UI needs to support shapes
-- Listing cards: render SVG outline instead of text dimensions for non-rectangular pieces
-- Listing detail: scaled SVG with annotated dimensions
-- Dashboard: draft queue for incoming camera scans awaiting workshop review
-- Browse filters: shape_type and area_mm2 as additional filter options
-
-### API key authentication (for camera → Supabase push)
-Each workshop gets a unique API key generated in their dashboard.
-Camera app stores it once (pasted in by operator during setup).
-Every POST to the ingest endpoint includes the key in the Authorization header.
-The endpoint verifies the key, resolves the workshop, creates a draft listing.
+### API key authentication
+Each workshop gets a unique API key from their dashboard.
+Pasted into camera app once during setup.
+Every POST includes the key in Authorization header.
+Endpoint verifies key, resolves workshop, creates draft stock_item.
 
 ### Important notes
-- Camera photos (preview.png, mask.png) are saved locally only — not pushed to Google Sheets.
-  If marketplace listings need photos, the camera app needs a new upload step to Supabase Storage.
-- The camera app's offcut_id (e.g. COOP-RECT-48234.5) is NOT a stable unique key — can collide.
-  Always generate a UUID primary key on the Supabase side; treat offcut_id as a human-readable label.
-- Human review is always required — operator must click Save for each scan. Nothing auto-submits.
-
-### Phasing recommendation
-1. Now: add shape columns to listings table (non-breaking migration)
-2. After Stripe: build POST /api/ingest endpoint and camera → Supabase push
-3. Alongside: update listing card and detail UI to render SVGs for camera-sourced listings
+- Camera photos saved locally only — not pushed. Marketplace photos need a separate upload step.
+- Camera's offcut_id (e.g. COOP-RECT-48234.5) can collide — always use Supabase UUID as PK.
+- Human review always required — operator clicks Save per scan, nothing auto-submits.
+- stock_items schema already includes all camera columns — no schema changes needed when camera integration is built.
