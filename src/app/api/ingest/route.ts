@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
   }
 
   const material = (body.material as string | undefined) ?? 'Unknown'
-  const category = deriveCategoryFromMaterial(material)
+  // Use explicit category from payload if sent, otherwise derive from material name
+  const category = (body.category as string | undefined) || deriveCategoryFromMaterial(material)
 
   // Camera reports thickness as P95 height above bed — round to nearest mm
   const thicknessMm = body.height_mm_above_bed_p95
