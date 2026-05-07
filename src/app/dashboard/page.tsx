@@ -5,7 +5,8 @@ import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
 import { markAsSold, archiveItem, relistItem } from './actions'
 import { generateApiKey } from './api-key-actions'
-import { ShapePreview, SHAPE_LABELS } from '@/components/shape-preview'
+import { SHAPE_LABELS } from '@/components/shape-preview'
+import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import type { StockItem } from '@/lib/types'
 
 const STATUS_STYLES: Record<StockItem['status'], string> = {
@@ -205,7 +206,7 @@ export default async function DashboardPage({
                       <td className="px-3 py-2">
                       <div className="flex flex-col items-center gap-1">
                         <div className="h-12 w-16">
-                          <ShapePreview
+                          <ShapePreviewModal
                             shapeType={item.shape_type}
                             verticesMm={item.vertices_mm}
                             lengthMm={item.length_mm}
@@ -213,7 +214,6 @@ export default async function DashboardPage({
                             thicknessMm={item.thickness_mm}
                             bboxWMm={item.bbox_w_mm}
                             bboxHMm={item.bbox_h_mm}
-                            showLabels={false}
                           />
                         </div>
                         <span className="text-xs text-stone-400">

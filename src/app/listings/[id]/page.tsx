@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl } from '@/lib/format'
-import { ShapePreview, SHAPE_LABELS } from '@/components/shape-preview'
+import { SHAPE_LABELS } from '@/components/shape-preview'
+import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import { uploadImage, deleteImage } from './actions'
 
 type StockShape = {
@@ -188,7 +189,7 @@ export default async function ListingPage({
                   </span>
                 </div>
                 <div className="h-44 w-full rounded-lg border border-stone-100 bg-stone-50">
-                  <ShapePreview
+                  <ShapePreviewModal
                     shapeType={shape?.shape_type ?? 'RECT'}
                     verticesMm={shape?.vertices_mm ?? null}
                     lengthMm={typedListing.length_mm}
@@ -196,7 +197,7 @@ export default async function ListingPage({
                     thicknessMm={typedListing.thickness_mm}
                     bboxWMm={shape?.bbox_w_mm ?? null}
                     bboxHMm={shape?.bbox_h_mm ?? null}
-                    showLabels={true}
+                    thumbnailShowLabels={true}
                   />
                 </div>
               </div>
