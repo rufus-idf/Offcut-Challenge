@@ -23,6 +23,11 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
     redirect(`/stock/${stockItemId}/publish?error=Item+is+not+available+to+publish`)
   }
 
+  // For non-rectangular shapes length_mm/width_mm are null on the stock item.
+  // Use the bounding box as the best approximation — the SVG preview shows the real shape.
+  const lengthMm = item.length_mm ?? (item.bbox_w_mm ? Math.round(item.bbox_w_mm) : null)
+  const widthMm  = item.width_mm  ?? (item.bbox_h_mm ? Math.round(item.bbox_h_mm) : null)
+
   // Create the public listing
   const { data: listing, error } = await supabase
     .from('listings')
@@ -32,8 +37,8 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
       category:      item.category,
       material:      item.material,
       finish,
-      length_mm:     item.length_mm,
-      width_mm:      item.width_mm,
+      length_mm:     lengthMm,
+      width_mm:      widthMm,
       thickness_mm:  item.thickness_mm,
       quantity:      item.quantity,
       price_pence:   pricePence,
