@@ -15,14 +15,14 @@ export function Header({ email, workshopName }: HeaderProps) {
             Offcut Challenge
           </Link>
           <nav className="flex gap-6">
+            <Link href="/dashboard" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+              My Stock
+            </Link>
             <Link href="/listings" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
-              Browse
+              Browse Listings
             </Link>
             <Link href="/workshops" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
               Map
-            </Link>
-            <Link href="/listings/new" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
-              New listing
             </Link>
           </nav>
         </div>

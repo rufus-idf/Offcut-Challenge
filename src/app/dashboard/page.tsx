@@ -15,7 +15,7 @@ const STATUS_STYLES: Record<StockItem['status'], string> = {
 }
 
 const STATUS_LABELS: Record<StockItem['status'], string> = {
-  available: 'Available',
+  available: 'In stock',
   listed:    'Listed',
   sold:      'Sold',
   used:      'Used',
@@ -29,10 +29,8 @@ type WorkshopDetails = {
   rejection_reason: string | null
 }
 
-// Stock item joined with its listing (if published)
-type StockWithListing = StockItem & {
-  listings: { id: string; price_pence: number; status: string } | null
-}
+type ListingRef = { id: string; price_pence: number; status: string }
+type StockWithListing = StockItem & { listings: ListingRef | ListingRef[] | null }
 
 export default async function DashboardPage({
   searchParams,
@@ -55,24 +53,29 @@ export default async function DashboardPage({
   const { message, filter } = await searchParams
   const activeFilter = filter ?? 'all'
 
-  // Fetch stock items with their linked listing
   let stockQuery = supabase
     .from('stock_items')
     .select('*, listings(id, price_pence, status)')
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
 
-  if (activeFilter === 'listed')   stockQuery = stockQuery.eq('status', 'listed')
+  if (activeFilter === 'listed')    stockQuery = stockQuery.eq('status', 'listed')
   if (activeFilter === 'available') stockQuery = stockQuery.eq('status', 'available')
-  if (activeFilter === 'sold')     stockQuery = stockQuery.eq('status', 'sold')
-  if (activeFilter === 'archived') stockQuery = stockQuery.eq('status', 'archived')
+  if (activeFilter === 'sold')      stockQuery = stockQuery.eq('status', 'sold')
+  if (activeFilter === 'archived')  stockQuery = stockQuery.eq('status', 'archived')
 
-  const { data: stockItems } = await stockQuery
+  const { data: rawItems } = await stockQuery
+
+  // Normalise the listings join — Supabase returns array for has-many
+  const stockItems: StockWithListing[] = (rawItems ?? []).map(item => ({
+    ...item,
+    listings: Array.isArray(item.listings) ? (item.listings[0] ?? null) : item.listings,
+  }))
 
   const filterTabs = [
-    { key: 'all',       label: 'All' },
+    { key: 'all',       label: 'All stock' },
+    { key: 'available', label: 'In stock' },
     { key: 'listed',    label: 'Listed' },
-    { key: 'available', label: 'Available' },
     { key: 'sold',      label: 'Sold' },
     { key: 'archived',  label: 'Archived' },
   ]
@@ -125,51 +128,49 @@ export default async function DashboardPage({
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-stone-900">{workshop?.name}</h1>
-            <p className="mt-1 text-sm text-stone-500">Stock inventory</p>
+            <h1 className="text-2xl font-bold text-stone-900">My Stock</h1>
+            <p className="mt-1 text-sm text-stone-500">{workshop?.name}</p>
           </div>
           {workshop?.verification_status === 'approved' && (
             <Link
               href="/listings/new"
               className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
             >
-              + New listing
+              + Add to my stock
             </Link>
           )}
         </div>
 
-        {/* Filter tabs */}
-        {(stockItems?.length ?? 0) > 0 && (
-          <div className="mb-4 flex gap-1">
-            {filterTabs.map(tab => (
-              <Link
-                key={tab.key}
-                href={tab.key === 'all' ? '/dashboard' : `/dashboard?filter=${tab.key}`}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                  activeFilter === tab.key
-                    ? 'bg-stone-900 text-white'
-                    : 'text-stone-600 hover:bg-stone-100'
-                }`}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </div>
-        )}
+        {/* Filter tabs — always visible */}
+        <div className="mb-4 flex gap-1">
+          {filterTabs.map(tab => (
+            <Link
+              key={tab.key}
+              href={tab.key === 'all' ? '/dashboard' : `/dashboard?filter=${tab.key}`}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                activeFilter === tab.key
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
 
         {/* Stock table */}
-        {!stockItems?.length ? (
+        {!stockItems.length ? (
           <div className="rounded-xl border border-dashed border-stone-300 bg-white py-20 text-center">
             <p className="mb-4 text-stone-500">
               {activeFilter !== 'all'
-                ? `No ${activeFilter} items.`
+                ? `No ${activeFilter === 'available' ? 'in-stock' : activeFilter} items.`
                 : workshop?.verification_status === 'approved'
-                  ? 'No stock yet. Add your first listing.'
+                  ? 'No stock yet.'
                   : 'Complete verification to start adding stock.'}
             </p>
             {workshop?.verification_status === 'approved' && activeFilter === 'all' && (
               <Link href="/listings/new" className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
-                Add your first listing
+                Add your first item
               </Link>
             )}
           </div>
@@ -187,8 +188,8 @@ export default async function DashboardPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {(stockItems as StockWithListing[]).map(item => {
-                  const listing = Array.isArray(item.listings) ? item.listings[0] : item.listings
+                {stockItems.map(item => {
+                  const listing = item.listings as ListingRef | null
                   return (
                     <tr key={item.id} className="hover:bg-stone-50">
                       <td className="px-5 py-3">
@@ -208,7 +209,7 @@ export default async function DashboardPage({
                       <td className="px-5 py-3 text-stone-600">
                         {item.length_mm && item.width_mm
                           ? formatDimensions(item.length_mm, item.width_mm, item.thickness_mm)
-                          : `${item.bbox_w_mm} × ${item.bbox_h_mm} × ${item.thickness_mm}mm`}
+                          : `${item.bbox_w_mm ?? '?'} × ${item.bbox_h_mm ?? '?'} × ${item.thickness_mm}mm`}
                       </td>
                       <td className="px-5 py-3 text-stone-600">{item.quantity}</td>
                       <td className="px-5 py-3 font-medium text-stone-900">
@@ -220,11 +221,19 @@ export default async function DashboardPage({
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
+                          {item.status === 'available' && (
+                            <Link
+                              href={`/stock/${item.id}/publish`}
+                              className="text-xs font-medium text-amber-700 hover:text-amber-900"
+                            >
+                              Publish to listings
+                            </Link>
+                          )}
                           {listing && item.status === 'listed' && (
                             <>
                               <Link href={`/listings/${listing.id}`} className="text-xs text-stone-500 hover:text-stone-700">
-                                View
+                                View listing
                               </Link>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
                                 <button type="submit" className="text-xs text-amber-700 hover:text-amber-900">

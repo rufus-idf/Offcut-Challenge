@@ -17,67 +17,38 @@ export async function createListing(formData: FormData) {
 
   if (!profile?.workshop_id) redirect('/onboarding')
 
-  const lengthMm  = parseInt(formData.get('length_mm') as string, 10)
-  const widthMm   = parseInt(formData.get('width_mm') as string, 10)
-  const thickMm   = parseInt(formData.get('thickness_mm') as string, 10)
-  const qty       = parseInt(formData.get('quantity') as string, 10)
-  const pricePence = Math.round(parseFloat(formData.get('price') as string) * 100)
-  const category  = formData.get('category') as string
-  const material  = formData.get('material') as string
-  const finish    = formData.get('finish') as string
+  const lengthMm = parseInt(formData.get('length_mm') as string, 10)
+  const widthMm  = parseInt(formData.get('width_mm') as string, 10)
+  const thickMm  = parseInt(formData.get('thickness_mm') as string, 10)
+  const qty      = parseInt(formData.get('quantity') as string, 10)
   const description = (formData.get('description') as string).trim() || null
 
-  // 1. Create the stock item — the canonical inventory record
-  const { data: stockItem, error: stockError } = await supabase
+  // Create stock item only — no listing yet.
+  // The workshop reviews their stock and publishes to the marketplace separately.
+  const { error } = await supabase
     .from('stock_items')
     .insert({
-      workshop_id:   profile.workshop_id,
-      source:        'manual',
-      shape_type:    'RECT',
-      category,
-      material,
-      finish,
-      length_mm:     lengthMm,
-      width_mm:      widthMm,
-      thickness_mm:  thickMm,
-      bbox_w_mm:     lengthMm,   // same as length for rectangles
-      bbox_h_mm:     widthMm,    // same as width for rectangles
-      area_mm2:      lengthMm * widthMm,
-      quantity:      qty,
+      workshop_id:  profile.workshop_id,
+      source:       'manual',
+      shape_type:   'RECT',
+      category:     formData.get('category') as string,
+      material:     formData.get('material') as string,
+      finish:       formData.get('finish') as string,
+      length_mm:    lengthMm,
+      width_mm:     widthMm,
+      thickness_mm: thickMm,
+      bbox_w_mm:    lengthMm,
+      bbox_h_mm:    widthMm,
+      area_mm2:     lengthMm * widthMm,
+      quantity:     qty,
       description,
-      status:        'listed',   // manual entries auto-publish
+      status:       'available',
     })
-    .select('id')
-    .single()
 
-  if (stockError) {
-    redirect(`/listings/new?error=${encodeURIComponent(stockError.message)}`)
-  }
-
-  // 2. Create the marketplace listing linked to the stock item
-  const { data: listing, error: listingError } = await supabase
-    .from('listings')
-    .insert({
-      workshop_id:   profile.workshop_id,
-      stock_item_id: stockItem.id,
-      category,
-      material,
-      finish,
-      length_mm:     lengthMm,
-      width_mm:      widthMm,
-      thickness_mm:  thickMm,
-      quantity:      qty,
-      price_pence:   pricePence,
-      description,
-    })
-    .select('id')
-    .single()
-
-  if (listingError) {
-    redirect(`/listings/new?error=${encodeURIComponent(listingError.message)}`)
+  if (error) {
+    redirect(`/listings/new?error=${encodeURIComponent(error.message)}`)
   }
 
   revalidatePath('/dashboard')
-  revalidatePath('/listings')
-  redirect(`/listings/${listing.id}`)
+  redirect('/dashboard')
 }
