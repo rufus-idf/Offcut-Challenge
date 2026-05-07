@@ -2,7 +2,10 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatDimensions } from '@/lib/format'
+import { FINISHES_BY_CATEGORY, type Category } from '@/lib/constants'
 import { publishToMarketplace } from './actions'
+
+const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
 
 export default async function PublishPage({
   params,
@@ -37,6 +40,12 @@ export default async function PublishPage({
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
   const publishAction = publishToMarketplace.bind(null, id)
 
+  // Use category-specific finishes, fall back to Wood if category not recognised
+  const category = (item.category as Category) in FINISHES_BY_CATEGORY
+    ? item.category as Category
+    : 'Wood'
+  const finishes = FINISHES_BY_CATEGORY[category]
+
   return (
     <div className="min-h-screen bg-stone-50">
       <Header email={user.email!} workshopName={workshopName} />
@@ -45,14 +54,14 @@ export default async function PublishPage({
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-stone-900">Publish to marketplace</h1>
           <p className="mt-2 text-sm text-stone-500">
-            Set a price and this item will appear on Browse Listings for all verified workshops to see.
+            Confirm the finish and set a price — then this item goes live on Browse Listings.
           </p>
         </div>
 
         {/* Item summary */}
         <div className="mb-6 rounded-xl border border-stone-200 bg-white p-5">
           <p className="font-semibold text-stone-900">{item.material}</p>
-          <p className="text-sm text-stone-500">{item.finish} · {item.category}</p>
+          <p className="text-sm text-stone-500">{item.category}</p>
           {item.length_mm && item.width_mm && (
             <p className="mt-1 text-sm text-stone-600">
               {formatDimensions(item.length_mm, item.width_mm, item.thickness_mm)}
@@ -68,7 +77,25 @@ export default async function PublishPage({
           <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
         )}
 
-        <form action={publishAction} className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+        <form action={publishAction} className="flex flex-col gap-5 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="finish" className="text-sm font-medium text-stone-700">
+              Finish
+            </label>
+            {/* Pre-select if the stock item already has a finish (manual entries do) */}
+            <select
+              id="finish" name="finish" required
+              defaultValue={item.finish ?? ''}
+              className={inputClass}
+            >
+              <option value="">Select finish…</option>
+              {finishes.map(f => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label htmlFor="price" className="text-sm font-medium text-stone-700">
               Asking price (£)
@@ -76,11 +103,11 @@ export default async function PublishPage({
             <input
               id="price" name="price" type="number" required min="0.01" step="0.01"
               placeholder="e.g. 12.50"
-              className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+              className={inputClass}
             />
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="submit"
               className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
