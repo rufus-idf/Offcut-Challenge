@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
 import { markAsSold, archiveItem, relistItem } from './actions'
+import { generateApiKey } from './api-key-actions'
 import type { StockItem } from '@/lib/types'
 
 const STATUS_STYLES: Record<StockItem['status'], string> = {
@@ -64,7 +65,14 @@ export default async function DashboardPage({
   if (activeFilter === 'sold')      stockQuery = stockQuery.eq('status', 'sold')
   if (activeFilter === 'archived')  stockQuery = stockQuery.eq('status', 'archived')
 
-  const { data: rawItems } = await stockQuery
+  const [{ data: rawItems }, { data: apiKeyRow }] = await Promise.all([
+    stockQuery,
+    supabase
+      .from('workshop_api_keys')
+      .select('api_key, created_at')
+      .eq('workshop_id', profile.workshop_id)
+      .single(),
+  ])
 
   // Normalise the listings join — Supabase returns array for has-many
   const stockItems: StockWithListing[] = (rawItems ?? []).map(item => ({
@@ -261,6 +269,58 @@ export default async function DashboardPage({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {/* Camera app API key — only shown to approved workshops */}
+        {workshop?.verification_status === 'approved' && (
+          <div className="mt-12 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-1 text-base font-semibold text-stone-900">Camera app integration</h2>
+            <p className="mb-5 text-sm text-stone-500">
+              Use this API key to connect your Offcut Scanner camera app directly to your stock.
+              Scanned offcuts will appear in your stock inventory automatically.
+            </p>
+
+            {apiKeyRow ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-stone-500">Your API key</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={apiKeyRow.api_key}
+                      className="flex-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 font-mono text-sm text-stone-700 outline-none"
+                    />
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    Copy this into your camera app settings. Keep it private — it grants access to your stock.
+                  </p>
+                </div>
+                <form action={generateApiKey}>
+                  <button
+                    type="submit"
+                    className="text-xs text-red-600 hover:text-red-800"
+                  >
+                    Regenerate key (invalidates the current one)
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <form action={generateApiKey}>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700"
+                >
+                  Generate API key
+                </button>
+              </form>
+            )}
+
+            <div className="mt-5 rounded-lg bg-stone-50 px-4 py-3 text-xs text-stone-500">
+              <p className="font-medium text-stone-700">Ingest endpoint</p>
+              <p className="mt-0.5 font-mono">POST https://offcut-challenge.vercel.app/api/ingest</p>
+              <p className="mt-2 font-medium text-stone-700">Authorization header</p>
+              <p className="mt-0.5 font-mono">Bearer {'<your-api-key>'}</p>
+            </div>
           </div>
         )}
       </main>
