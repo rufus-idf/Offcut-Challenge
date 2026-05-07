@@ -4,7 +4,16 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl } from '@/lib/format'
+import { ShapePreview, SHAPE_LABELS } from '@/components/shape-preview'
 import { uploadImage, deleteImage } from './actions'
+
+type StockShape = {
+  shape_type: string
+  vertices_mm: number[][] | null
+  svg_path_data: string | null
+  bbox_w_mm: number | null
+  bbox_h_mm: number | null
+}
 
 type ListingDetail = {
   id: string
@@ -21,6 +30,7 @@ type ListingDetail = {
   status: string
   workshops: { name: string; town: string | null; county: string | null }
   listing_images: { id: string; storage_path: string; position: number }[]
+  stock_items: StockShape | null
 }
 
 export default async function ListingPage({
@@ -40,7 +50,7 @@ export default async function ListingPage({
   const [{ data: listing }, { data: profile }] = await Promise.all([
     supabase
       .from('listings')
-      .select('*, workshops(name, town, county), listing_images(id, storage_path, position)')
+      .select('*, workshops(name, town, county), listing_images(id, storage_path, position), stock_items(shape_type, vertices_mm, svg_path_data, bbox_w_mm, bbox_h_mm)')
       .eq('id', id)
       .single(),
     supabase
@@ -58,6 +68,9 @@ export default async function ListingPage({
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
   const typedListing = listing as unknown as ListingDetail
   const images = [...typedListing.listing_images].sort((a, b) => a.position - b.position)
+  const shape = Array.isArray(typedListing.stock_items)
+    ? (typedListing.stock_items[0] ?? null)
+    : typedListing.stock_items
 
   const uploadAction = uploadImage.bind(null, id)
 
@@ -164,6 +177,28 @@ export default async function ListingPage({
                   <p className="text-stone-500">{typedListing.finish}</p>
                 </div>
                 <p className="text-2xl font-bold text-amber-700">{formatPrice(typedListing.price_pence)}</p>
+              </div>
+
+              {/* Shape diagram */}
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-stone-500">Shape</p>
+                  <span className="text-xs text-stone-400">
+                    {SHAPE_LABELS[shape?.shape_type ?? 'RECT'] ?? shape?.shape_type ?? 'Rectangle'}
+                  </span>
+                </div>
+                <div className="h-44 w-full rounded-lg border border-stone-100 bg-stone-50">
+                  <ShapePreview
+                    shapeType={shape?.shape_type ?? 'RECT'}
+                    verticesMm={shape?.vertices_mm ?? null}
+                    lengthMm={typedListing.length_mm}
+                    widthMm={typedListing.width_mm}
+                    thicknessMm={typedListing.thickness_mm}
+                    bboxWMm={shape?.bbox_w_mm ?? null}
+                    bboxHMm={shape?.bbox_h_mm ?? null}
+                    showLabels={true}
+                  />
+                </div>
               </div>
 
               <dl className="divide-y divide-stone-100 text-sm">

@@ -60,8 +60,9 @@ export type ListingImage = {
   created_at: string
 }
 
-// Used on browse page — joins workshop name, location, coords and first image
+// Used on browse page — joins workshop name, location, coords, first image, and shape
 export type ListingWithWorkshop = Listing & {
+  shape_type?: string
   workshops: {
     name: string
     town: string | null

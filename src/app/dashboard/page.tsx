@@ -5,6 +5,7 @@ import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
 import { markAsSold, archiveItem, relistItem } from './actions'
 import { generateApiKey } from './api-key-actions'
+import { ShapePreview, SHAPE_LABELS } from '@/components/shape-preview'
 import type { StockItem } from '@/lib/types'
 
 const STATUS_STYLES: Record<StockItem['status'], string> = {
@@ -187,6 +188,7 @@ export default async function DashboardPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-stone-100 text-left text-xs font-medium uppercase tracking-wide text-stone-400">
+                  <th className="px-5 py-3">Shape</th>
                   <th className="px-5 py-3">Item</th>
                   <th className="px-5 py-3">Dimensions</th>
                   <th className="px-5 py-3">Qty</th>
@@ -200,7 +202,26 @@ export default async function DashboardPage({
                   const listing = item.listings as ListingRef | null
                   return (
                     <tr key={item.id} className="hover:bg-stone-50">
-                      <td className="px-5 py-3">
+                      <td className="px-3 py-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="h-12 w-16">
+                          <ShapePreview
+                            shapeType={item.shape_type}
+                            verticesMm={item.vertices_mm}
+                            lengthMm={item.length_mm}
+                            widthMm={item.width_mm}
+                            thicknessMm={item.thickness_mm}
+                            bboxWMm={item.bbox_w_mm}
+                            bboxHMm={item.bbox_h_mm}
+                            showLabels={false}
+                          />
+                        </div>
+                        <span className="text-xs text-stone-400">
+                          {SHAPE_LABELS[item.shape_type] ?? item.shape_type}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
                         {listing ? (
                           <Link href={`/listings/${listing.id}`} className="hover:underline">
                             <p className="font-medium text-stone-900">{item.material}</p>

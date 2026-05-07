@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl, formatDistance } from '@/lib/format'
 import { CATEGORIES, ALL_MATERIALS, ALL_FINISHES } from '@/lib/constants'
+import { SHAPE_LABELS } from '@/components/shape-preview'
 import { geocodePostcode, haversineKm } from '@/lib/geocode'
 import type { ListingWithWorkshop } from '@/lib/types'
 
@@ -57,7 +58,7 @@ export default async function BrowsePage({
 
   let query = supabase
     .from('listings')
-    .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position)')
+    .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type)')
     .eq('status', 'active')
 
   if (filters.category)  query = query.eq('category', filters.category)
@@ -198,6 +199,8 @@ export default async function BrowsePage({
             {listings.map(listing => {
               const firstImage = [...listing.listing_images]
                 .sort((a, b) => a.position - b.position)[0]
+              const stockSnap = (listing as unknown as { stock_items: { shape_type: string } | { shape_type: string }[] | null }).stock_items
+              const shapeType = Array.isArray(stockSnap) ? stockSnap[0]?.shape_type : stockSnap?.shape_type
 
               return (
                 <Link
@@ -250,7 +253,14 @@ export default async function BrowsePage({
                           </p>
                         )}
                       </div>
-                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
+                        {shapeType && shapeType !== 'RECT' && (
+                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            {SHAPE_LABELS[shapeType] ?? shapeType}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Link>
