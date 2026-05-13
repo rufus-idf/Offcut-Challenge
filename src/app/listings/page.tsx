@@ -27,6 +27,7 @@ export default async function BrowsePage({
     postcode?: string
     hide_own?: string
     page?: string
+    view?: string
     min_length?: string
     max_length?: string
     min_width?: string
@@ -145,6 +146,7 @@ export default async function BrowsePage({
     if (filters.max_width)    sp.set('max_width',    filters.max_width)
     if (filters.min_thickness) sp.set('min_thickness', filters.min_thickness)
     if (filters.max_thickness) sp.set('max_thickness', filters.max_thickness)
+    if (filters.view && filters.view !== 'grid') sp.set('view', filters.view)
     if (p > 1)                sp.set('page',         String(p))
     const qs = sp.toString()
     return `/listings${qs ? `?${qs}` : ''}`
@@ -193,92 +195,102 @@ export default async function BrowsePage({
           </div>
         ) : (
           <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.map(listing => {
-              const firstImage = [...listing.listing_images]
-                .sort((a, b) => a.position - b.position)[0]
-              type StockSnap = { shape_type: string; vertices_mm: number[][] | null; bbox_w_mm: number | null; bbox_h_mm: number | null }
-              const rawSnap = (listing as unknown as { stock_items: StockSnap | StockSnap[] | null }).stock_items
-              const stock = Array.isArray(rawSnap) ? (rawSnap[0] ?? null) : rawSnap
-              const shapeType = stock?.shape_type
-
-              return (
-                <Link
-                  key={listing.id}
-                  href={`/listings/${listing.id}`}
-                  className="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="relative aspect-[4/3] bg-stone-100">
-                    {firstImage ? (
-                      <Image
-                        src={getImageUrl(firstImage.storage_path)}
-                        alt={`${listing.material} ${listing.finish}`}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center bg-stone-50 p-4">
-                        <ShapePreviewModal
-                          shapeType={stock?.shape_type ?? 'RECT'}
-                          verticesMm={stock?.vertices_mm ?? null}
-                          lengthMm={listing.length_mm}
-                          widthMm={listing.width_mm}
-                          thicknessMm={listing.thickness_mm}
-                          bboxWMm={stock?.bbox_w_mm ?? null}
-                          bboxHMm={stock?.bbox_h_mm ?? null}
-                          thumbnailShowLabels={true}
-                          thumbnailClassName="h-full w-full"
-                        />
+          {/* Grid views */}
+          {filters.view !== 'list' && (
+            <div className={`grid gap-4 ${filters.view === 'wide' ? 'sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+              {listings.map(listing => {
+                const firstImage = [...listing.listing_images].sort((a, b) => a.position - b.position)[0]
+                type StockSnap = { shape_type: string; vertices_mm: number[][] | null; bbox_w_mm: number | null; bbox_h_mm: number | null }
+                const rawSnap = (listing as unknown as { stock_items: StockSnap | StockSnap[] | null }).stock_items
+                const stock = Array.isArray(rawSnap) ? (rawSnap[0] ?? null) : rawSnap
+                const shapeType = stock?.shape_type
+                return (
+                  <Link key={listing.id} href={`/listings/${listing.id}`} className="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+                    <div className="relative aspect-[4/3] bg-stone-100">
+                      {firstImage ? (
+                        <Image src={getImageUrl(firstImage.storage_path)} alt={`${listing.material} ${listing.finish}`} fill className="object-cover transition-transform duration-300 group-hover:scale-[1.02]" sizes="25vw" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-stone-50 p-4">
+                          <ShapePreviewModal shapeType={stock?.shape_type ?? 'RECT'} verticesMm={stock?.vertices_mm ?? null} lengthMm={listing.length_mm} widthMm={listing.width_mm} thicknessMm={listing.thickness_mm} bboxWMm={stock?.bbox_w_mm ?? null} bboxHMm={stock?.bbox_h_mm ?? null} thumbnailShowLabels thumbnailClassName="h-full w-full" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-stone-900">{listing.material}</p>
+                          <p className="text-sm text-stone-500">{listing.finish}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-[#2A9E5A]">{formatPrice(listing.price_pence)}</p>
+                          <p className="text-xs text-stone-400">per piece</p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="p-4">
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-stone-900">{listing.material}</p>
-                        <p className="text-sm text-stone-500">{listing.finish}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-[#2A9E5A]">{formatPrice(listing.price_pence)}</p>
-                        <p className="text-xs text-stone-400">per piece</p>
+                      <p className="text-sm text-stone-600">{formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}</p>
+                      <p className="mt-0.5 text-sm text-stone-400">Qty: {listing.quantity}</p>
+                      <div className="mt-3 flex items-end justify-between gap-2">
+                        <div>
+                          <p className="text-xs text-stone-400">{listing.workshops.name}</p>
+                          {listing.workshops.town && <p className="text-xs text-stone-400">{listing.workshops.town}{listing.workshops.county ? `, ${listing.workshops.county}` : ''}</p>}
+                          {userCoords && listing._distKm !== Infinity && <p className="mt-0.5 text-xs font-medium text-[#2A9E5A]">{formatDistance(listing._distKm)}</p>}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
+                          {shapeType && shapeType !== 'RECT' && <span className="rounded-full bg-[#E8F7EE] px-2 py-0.5 text-xs text-[#2A9E5A]">{SHAPE_LABELS[shapeType] ?? shapeType}</span>}
+                        </div>
                       </div>
                     </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
 
-                    <p className="text-sm text-stone-600">
-                      {formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}
-                    </p>
-                    <p className="mt-0.5 text-sm text-stone-400">Qty: {listing.quantity}</p>
-
-                    <div className="mt-3 flex items-end justify-between gap-2">
-                      <div>
-                        <p className="text-xs text-stone-400">{listing.workshops.name}</p>
-                        {listing.workshops.town && (
-                          <p className="text-xs text-stone-400">
-                            {listing.workshops.town}{listing.workshops.county ? `, ${listing.workshops.county}` : ''}
-                          </p>
-                        )}
-                        {userCoords && listing._distKm !== Infinity && (
-                          <p className="mt-0.5 text-xs font-medium text-[#2A9E5A]">
-                            {formatDistance(listing._distKm)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
-                        {shapeType && shapeType !== 'RECT' && (
-                          <span className="rounded-full bg-[#E8F7EE] px-2 py-0.5 text-xs text-[#2A9E5A]">
-                            {SHAPE_LABELS[shapeType] ?? shapeType}
-                          </span>
-                        )}
-                      </div>
+          {/* List view — compact rows, maximum density */}
+          {filters.view === 'list' && (
+            <div className="flex flex-col divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white shadow-sm">
+              {listings.map(listing => {
+                const firstImage = [...listing.listing_images].sort((a, b) => a.position - b.position)[0]
+                type StockSnap = { shape_type: string; vertices_mm: number[][] | null; bbox_w_mm: number | null; bbox_h_mm: number | null }
+                const rawSnap = (listing as unknown as { stock_items: StockSnap | StockSnap[] | null }).stock_items
+                const stock = Array.isArray(rawSnap) ? (rawSnap[0] ?? null) : rawSnap
+                return (
+                  <Link key={listing.id} href={`/listings/${listing.id}`} className="group flex items-center gap-4 px-5 py-3 transition-colors hover:bg-stone-50">
+                    {/* Thumbnail */}
+                    <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-100">
+                      {firstImage ? (
+                        <Image src={getImageUrl(firstImage.storage_path)} alt="" fill className="object-cover" sizes="80px" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center p-2">
+                          <ShapePreviewModal shapeType={stock?.shape_type ?? 'RECT'} verticesMm={stock?.vertices_mm ?? null} lengthMm={listing.length_mm} widthMm={listing.width_mm} thicknessMm={listing.thickness_mm} bboxWMm={stock?.bbox_w_mm ?? null} bboxHMm={stock?.bbox_h_mm ?? null} thumbnailClassName="h-full w-full" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+                    {/* Material + finish */}
+                    <div className="w-40 shrink-0">
+                      <p className="font-semibold text-stone-900 group-hover:text-[#2A9E5A] transition-colors">{listing.material}</p>
+                      <p className="text-sm text-stone-500">{listing.finish}</p>
+                    </div>
+                    {/* Dimensions */}
+                    <p className="w-40 shrink-0 text-sm text-stone-600">{formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}</p>
+                    {/* Qty */}
+                    <p className="w-20 shrink-0 text-sm text-stone-500">Qty {listing.quantity}</p>
+                    {/* Workshop */}
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm text-stone-500">{listing.workshops.name}</p>
+                      {listing.workshops.town && <p className="truncate text-xs text-stone-400">{listing.workshops.town}{listing.workshops.county ? `, ${listing.workshops.county}` : ''}</p>}
+                      {userCoords && listing._distKm !== Infinity && <p className="text-xs font-medium text-[#2A9E5A]">{formatDistance(listing._distKm)}</p>}
+                    </div>
+                    {/* Category */}
+                    <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
+                    {/* Price */}
+                    <p className="shrink-0 font-bold text-[#2A9E5A]">{formatPrice(listing.price_pence)}</p>
+                    <svg className="h-4 w-4 shrink-0 text-stone-300 group-hover:text-[#3DBE72] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
