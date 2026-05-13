@@ -1,3 +1,5 @@
+export const metadata = { title: 'Add to stock' }
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'

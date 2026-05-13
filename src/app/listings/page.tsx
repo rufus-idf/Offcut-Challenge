@@ -1,3 +1,5 @@
+export const metadata = { title: 'Browse Listings' }
+
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -70,7 +72,14 @@ export default async function BrowsePage({
 
   if (filters.q) {
     const q = filters.q.trim().replace(/[%_]/g, '')
-    query = query.or(`material.ilike.%${q}%,finish.ilike.%${q}%,description.ilike.%${q}%`)
+    // Also match on workshop name — fetch IDs first then include in OR
+    const { data: matchingWorkshops } = await supabase
+      .from('workshops')
+      .select('id')
+      .ilike('name', `%${q}%`)
+    const workshopIds = (matchingWorkshops ?? []).map(w => w.id)
+    const workshopClause = workshopIds.length > 0 ? `,workshop_id.in.(${workshopIds.join(',')})` : ''
+    query = query.or(`material.ilike.%${q}%,finish.ilike.%${q}%,description.ilike.%${q}%${workshopClause}`)
   }
   if (filters.category)  query = query.eq('category', filters.category)
   if (filters.material)  query = query.eq('material', filters.material)

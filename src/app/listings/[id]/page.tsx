@@ -10,6 +10,21 @@ import { uploadImage, deleteImage, setImageAsCover } from './actions'
 import { QuantityEnquiry } from '@/components/quantity-enquiry'
 import { SubmitButton } from '@/components/submit-button'
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('listings')
+    .select('material, finish, length_mm, width_mm, thickness_mm')
+    .eq('id', id)
+    .single()
+  if (!data) return { title: 'Listing' }
+  const dims = data.length_mm && data.width_mm
+    ? ` ${data.length_mm}×${data.width_mm}×${data.thickness_mm}mm`
+    : ''
+  return { title: `${data.material} — ${data.finish}${dims}` }
+}
+
 type StockShape = {
   shape_type: string
   vertices_mm: number[][] | null

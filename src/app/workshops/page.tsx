@@ -1,3 +1,5 @@
+export const metadata = { title: 'Workshop Map' }
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'

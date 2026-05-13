@@ -1,9 +1,12 @@
+export const metadata = { title: 'My Stock' }
+
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
 import { markAsSold, archiveItem, relistItem, unlistItem } from './actions'
+import { SubmitButton } from '@/components/submit-button'
 import { SHAPE_LABELS } from '@/components/shape-preview'
 import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import type { StockItem } from '@/lib/types'
@@ -300,27 +303,27 @@ export default async function DashboardPage({
                                 Sold some
                               </Link>
                               <form action={unlistItem.bind(null, item.id, listing.id)}>
-                                <button type="submit" className="text-xs text-stone-500 hover:text-stone-700">
+                                <SubmitButton pendingText="…" className="text-xs text-stone-500 hover:text-stone-700 disabled:opacity-40">
                                   Unlist
-                                </button>
+                                </SubmitButton>
                               </form>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
-                                <button type="submit" className="text-xs text-amber-700 hover:text-amber-900">
+                                <SubmitButton pendingText="…" className="text-xs text-amber-700 hover:text-amber-900 disabled:opacity-40">
                                   Mark sold
-                                </button>
+                                </SubmitButton>
                               </form>
                               <form action={archiveItem.bind(null, item.id, listing.id)}>
-                                <button type="submit" className="text-xs text-stone-400 hover:text-stone-600">
+                                <SubmitButton pendingText="…" className="text-xs text-stone-400 hover:text-stone-600 disabled:opacity-40">
                                   Archive
-                                </button>
+                                </SubmitButton>
                               </form>
                             </>
                           )}
                           {listing && (item.status === 'sold' || item.status === 'archived') && (
                             <form action={relistItem.bind(null, item.id, listing.id)}>
-                              <button type="submit" className="text-xs text-green-700 hover:text-green-900">
+                              <SubmitButton pendingText="…" className="text-xs text-green-700 hover:text-green-900 disabled:opacity-40">
                                 Relist
-                              </button>
+                              </SubmitButton>
                             </form>
                           )}
                         </div>

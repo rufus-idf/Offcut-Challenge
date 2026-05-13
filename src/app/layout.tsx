@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Offcut Challenge",
-  description: "The UK marketplace for timber offcuts between workshops.",
+  title: {
+    default: "Offcut Challenge",
+    template: "%s — Offcut Challenge",
+  },
+  description: "The UK B2B marketplace for material offcuts between workshops.",
 };
 
 export default function RootLayout({

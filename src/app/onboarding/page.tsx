@@ -1,3 +1,5 @@
+export const metadata = { title: 'Set up your workshop' }
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createWorkshop } from './actions'

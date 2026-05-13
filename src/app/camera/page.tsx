@@ -1,3 +1,5 @@
+export const metadata = { title: 'Camera Integration' }
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'

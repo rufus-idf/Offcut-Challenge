@@ -5,6 +5,17 @@ import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl, getLogoUrl } from '@/lib/format'
 import Image from 'next/image'
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('workshops')
+    .select('name')
+    .eq('slug', slug)
+    .single()
+  return { title: data?.name ?? 'Workshop' }
+}
+
 type Workshop = {
   id: string
   name: string

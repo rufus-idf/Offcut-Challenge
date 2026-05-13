@@ -1,3 +1,5 @@
+export const metadata = { title: 'Record a sale' }
+
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'

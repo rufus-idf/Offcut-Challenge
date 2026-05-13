@@ -1,3 +1,5 @@
+export const metadata = { title: 'Sign in' }
+
 import Link from 'next/link'
 import { login } from '../actions'
 

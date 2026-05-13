@@ -1,3 +1,5 @@
+export const metadata = { title: 'Admin' }
+
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { approveWorkshop, rejectWorkshop, geocodeMissingWorkshops } from './actions'
