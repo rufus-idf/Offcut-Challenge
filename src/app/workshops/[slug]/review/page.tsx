@@ -56,7 +56,7 @@ export default async function ReviewPage({
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={viewerWorkshopName} />
 
-      <main className="mx-auto max-w-lg px-6 py-12">
+      <main className="mx-auto max-w-2xl px-8 py-12">
         <Link
           href={`/workshops/${slug}`}
           className="mb-8 inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700"

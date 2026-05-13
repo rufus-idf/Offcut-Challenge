@@ -107,7 +107,7 @@ export default async function DashboardPage({
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshop?.name} />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="px-8 py-10">
 
         {/* Verification banners */}
         {workshop?.verification_status === 'unverified' && (

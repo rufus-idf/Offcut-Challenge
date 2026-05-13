@@ -32,7 +32,7 @@ export default async function WorkshopsPage() {
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="px-8 py-10">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-stone-900">Workshops</h1>
           <p className="mt-1 text-sm text-stone-500">

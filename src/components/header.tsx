@@ -9,7 +9,7 @@ interface HeaderProps {
 export function Header({ email, workshopName }: HeaderProps) {
   return (
     <header className="bg-[#1C1C1E] border-b border-white/[0.07]">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="flex h-16 items-center justify-between px-8">
 
         {/* Logo + nav */}
         <div className="flex items-center gap-10">

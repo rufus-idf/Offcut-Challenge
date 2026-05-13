@@ -51,7 +51,7 @@ export default async function ReduceQtyPage({
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
-      <main className="mx-auto max-w-sm px-6 py-10">
+      <main className="mx-auto max-w-xl px-8 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-stone-900">Record a sale</h1>
           <p className="mt-2 text-sm text-stone-500">

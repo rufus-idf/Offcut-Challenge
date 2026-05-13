@@ -73,7 +73,7 @@ export default async function AppHomePage() {
           style={{ background: 'linear-gradient(to bottom, transparent, #FAF9F7)' }}
         />
 
-        <div className="relative mx-auto max-w-5xl px-6 py-16 pb-32">
+        <div className="relative px-8 py-16 pb-32">
           {/* Badge */}
           <div
             className="mb-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest"
@@ -125,7 +125,7 @@ export default async function AppHomePage() {
       </div>
 
       {/* Cards + actions */}
-      <main className="relative z-10 mx-auto max-w-5xl px-6 pb-16 -mt-10">
+      <main className="relative z-10 px-8 pb-16 -mt-10">
 
         {/* Verification notice */}
         {!isVerified && (

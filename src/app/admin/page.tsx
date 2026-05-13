@@ -33,7 +33,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-[#FAF9F7]">
       <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-8 py-4">
           <div>
             <span className="text-lg font-bold text-stone-900">Offcut Challenge</span>
             <span className="ml-3 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">Admin</span>
@@ -42,7 +42,7 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="px-8 py-10">
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-stone-900">Workshop applications</h1>

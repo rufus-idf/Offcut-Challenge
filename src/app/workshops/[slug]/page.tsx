@@ -128,7 +128,7 @@ export default async function WorkshopProfilePage({
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={viewerWorkshopName} />
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="px-8 py-10">
         <Link href="/workshops" className="mb-8 inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
           ← Workshop map
         </Link>

@@ -39,7 +39,7 @@ export default async function CameraPage({
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main className="mx-auto max-w-4xl px-8 py-10">
 
         {/* Hero */}
         <div className="mb-10 text-center">
