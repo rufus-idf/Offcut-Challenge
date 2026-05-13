@@ -13,7 +13,7 @@ export function Header({ email, workshopName }: HeaderProps) {
 
         {/* Logo + nav */}
         <div className="flex items-center gap-10">
-          <Link href="/dashboard" className="text-lg font-bold tracking-tight">
+          <Link href="/home" className="text-lg font-bold tracking-tight">
             <span className="text-white">Offcut</span>
             <span className="text-[#3DBE72]">Challenge</span>
           </Link>
