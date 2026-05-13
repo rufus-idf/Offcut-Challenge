@@ -28,7 +28,7 @@ export function ListingsFilters({
   const router = useRouter()
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const filtersRef = useRef(filters)
   useEffect(() => { filtersRef.current = filters }, [filters])
 
