@@ -31,7 +31,7 @@ type WorkshopDetails = {
   rejection_reason: string | null
 }
 
-type ListingRef = { id: string; price_pence: number; status: string }
+type ListingRef = { id: string; price_pence: number; quantity: number; status: string }
 type StockWithListing = StockItem & { listings: ListingRef | ListingRef[] | null }
 
 export default async function DashboardPage({
@@ -57,7 +57,7 @@ export default async function DashboardPage({
 
   let stockQuery = supabase
     .from('stock_items')
-    .select('*, listings(id, price_pence, status)')
+    .select('*, listings(id, price_pence, quantity, status)')
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
 
@@ -240,7 +240,16 @@ export default async function DashboardPage({
                           ? formatDimensions(item.length_mm, item.width_mm, item.thickness_mm)
                           : `${item.bbox_w_mm ?? '?'} × ${item.bbox_h_mm ?? '?'} × ${item.thickness_mm}mm`}
                       </td>
-                      <td className="px-5 py-3 text-stone-600">{item.quantity}</td>
+                      <td className="px-5 py-3 text-stone-600">
+                        {listing && listing.quantity < item.quantity ? (
+                          <span>
+                            {listing.quantity} listed
+                            <span className="block text-xs text-stone-400">{item.quantity} total</span>
+                          </span>
+                        ) : (
+                          item.quantity
+                        )}
+                      </td>
                       <td className="px-5 py-3 font-medium text-stone-900">
                         {listing ? formatPrice(listing.price_pence) : '—'}
                       </td>

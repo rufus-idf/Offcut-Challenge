@@ -262,7 +262,10 @@ export default async function BrowsePage({
                         <p className="font-semibold text-stone-900">{listing.material}</p>
                         <p className="text-sm text-stone-500">{listing.finish}</p>
                       </div>
-                      <p className="font-bold text-amber-700">{formatPrice(listing.price_pence)}</p>
+                      <div className="text-right">
+                        <p className="font-bold text-amber-700">{formatPrice(listing.price_pence)}</p>
+                        <p className="text-xs text-stone-400">per piece</p>
+                      </div>
                     </div>
 
                     <p className="text-sm text-stone-600">

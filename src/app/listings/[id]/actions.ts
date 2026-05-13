@@ -3,6 +3,47 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { sendEnquiryEmail } from '@/lib/resend'
+
+export async function enquireListing(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+
+  const listingId   = formData.get('listing_id') as string
+  const requestedQty = parseInt(formData.get('quantity') as string, 10)
+
+  const [{ data: listing }, { data: profile }] = await Promise.all([
+    supabase
+      .from('listings')
+      .select('material, finish, price_pence, quantity, workshops(name)')
+      .eq('id', listingId)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('workshop_id, workshops(name)')
+      .eq('id', user.id)
+      .single(),
+  ])
+
+  if (!listing || !profile) redirect(`/listings/${listingId}`)
+
+  const sellerName = (listing.workshops as unknown as { name: string }).name
+  const buyerName  = (profile.workshops as unknown as { name: string }).name
+  const qty = Math.min(Math.max(1, requestedQty), listing.quantity)
+
+  sendEnquiryEmail({
+    buyerWorkshop: buyerName,
+    sellerWorkshop: sellerName,
+    material: listing.material,
+    finish: listing.finish,
+    pricePence: listing.price_pence,
+    requestedQty: qty,
+    listingUrl: `https://offcut-challenge.vercel.app/listings/${listingId}`,
+  }).catch(() => {})
+
+  redirect(`/listings/${listingId}?enquired=1`)
+}
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_BYTES = 5 * 1024 * 1024 // 5 MB

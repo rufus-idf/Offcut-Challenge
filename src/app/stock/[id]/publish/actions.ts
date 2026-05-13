@@ -10,7 +10,8 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
   if (!user) redirect('/auth/login')
 
   const pricePence = Math.round(parseFloat(formData.get('price') as string) * 100)
-  const finish = (formData.get('finish') as string).trim()
+  const finish   = (formData.get('finish') as string).trim()
+  const listQty  = parseInt(formData.get('list_qty') as string, 10)
 
   // Fetch the stock item — RLS ensures this is the workshop's own item
   const { data: item } = await supabase
@@ -40,7 +41,7 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
       length_mm:     lengthMm,
       width_mm:      widthMm,
       thickness_mm:  item.thickness_mm,
-      quantity:      item.quantity,
+      quantity:      Math.min(listQty, item.quantity),
       price_pence:   pricePence,
       description:   item.description,
     })

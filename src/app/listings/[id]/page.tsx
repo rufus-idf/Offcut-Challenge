@@ -7,6 +7,7 @@ import { formatPrice, formatDimensions, getImageUrl } from '@/lib/format'
 import { SHAPE_LABELS } from '@/components/shape-preview'
 import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import { uploadImage, deleteImage } from './actions'
+import { QuantityEnquiry } from '@/components/quantity-enquiry'
 
 type StockShape = {
   shape_type: string
@@ -39,10 +40,10 @@ export default async function ListingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; enquired?: string }>
 }) {
   const { id } = await params
-  const { error } = await searchParams
+  const { error, enquired } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -98,6 +99,14 @@ export default async function ListingPage({
 
         {error && (
           <p className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+        )}
+        {enquired === '1' && (
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4">
+            <p className="font-semibold text-green-800">Enquiry sent!</p>
+            <p className="mt-0.5 text-sm text-green-700">
+              We&apos;ve notified the seller. They&apos;ll be in touch to arrange payment and collection.
+            </p>
+          </div>
         )}
 
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -189,7 +198,10 @@ export default async function ListingPage({
                   <h1 className="text-2xl font-bold text-stone-900">{typedListing.material}</h1>
                   <p className="text-stone-500">{typedListing.finish}</p>
                 </div>
-                <p className="text-2xl font-bold text-amber-700">{formatPrice(typedListing.price_pence)}</p>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-amber-700">{formatPrice(typedListing.price_pence)}</p>
+                  <p className="text-xs text-stone-400">per piece</p>
+                </div>
               </div>
 
               {/* Shape diagram */}
@@ -255,10 +267,16 @@ export default async function ListingPage({
               )}
             </div>
 
-            {!isOwner && (
-              <div className="rounded-xl border border-stone-200 bg-white p-4 text-center">
-                <p className="text-sm text-stone-400">Messaging coming soon</p>
+            {isOwner ? (
+              <div className="rounded-xl border border-stone-100 bg-stone-50 p-4 text-center">
+                <p className="text-sm text-stone-400">This is your listing</p>
               </div>
+            ) : (
+              <QuantityEnquiry
+                listingId={id}
+                maxQty={typedListing.quantity}
+                pricePence={typedListing.price_pence}
+              />
             )}
           </div>
 

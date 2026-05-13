@@ -97,14 +97,32 @@ export default async function PublishPage({
           </div>
 
           <div className="flex flex-col gap-1.5">
+            <label htmlFor="list_qty" className="text-sm font-medium text-stone-700">
+              Quantity to list
+            </label>
+            <input
+              id="list_qty" name="list_qty" type="number" required
+              min="1" max={item.quantity}
+              defaultValue={item.quantity}
+              className={`${inputClass} w-28`}
+            />
+            <p className="text-xs text-stone-400">
+              You have {item.quantity} in stock — list some or all of them. The rest stay private.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <label htmlFor="price" className="text-sm font-medium text-stone-700">
-              Asking price (£)
+              Asking price — per piece (£)
             </label>
             <input
               id="price" name="price" type="number" required min="0.01" step="0.01"
               placeholder="e.g. 12.50"
               className={inputClass}
             />
+            <p className="text-xs text-stone-400">
+              Buyers can purchase any quantity up to your listed amount at this price per piece.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-2">
