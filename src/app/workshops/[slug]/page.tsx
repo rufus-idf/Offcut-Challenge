@@ -146,7 +146,7 @@ export default async function WorkshopProfilePage({
                       </div>
                       <div className="mt-2 flex items-center justify-between text-xs text-stone-400">
                         {listing.length_mm && listing.width_mm ? (
-                          <span>{formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm)}</span>
+                          <span>{formatDimensions(listing.length_mm, listing.width_mm, listing.thickness_mm ?? 0)}</span>
                         ) : (
                           <span>{listing.category}</span>
                         )}
