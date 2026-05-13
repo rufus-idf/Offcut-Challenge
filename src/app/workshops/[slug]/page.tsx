@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl, getLogoUrl } from '@/lib/format'
 import Image from 'next/image'
+import { ShapePreviewModal } from '@/components/shape-preview-modal'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -39,6 +40,7 @@ type ListingRow = {
   quantity: number
   price_pence: number
   listing_images: { storage_path: string }[]
+  stock_items: { shape_type: string; vertices_mm: number[][] | null; bbox_w_mm: number | null; bbox_h_mm: number | null } | null
 }
 
 export default async function WorkshopProfilePage({
@@ -71,7 +73,7 @@ export default async function WorkshopProfilePage({
 
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, material, finish, category, length_mm, width_mm, thickness_mm, quantity, price_pence, listing_images(storage_path)')
+    .select('id, material, finish, category, length_mm, width_mm, thickness_mm, quantity, price_pence, listing_images(storage_path), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)')
     .eq('workshop_id', workshop.id)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
@@ -165,6 +167,7 @@ export default async function WorkshopProfilePage({
               {typedListings.map(listing => {
                 const images = Array.isArray(listing.listing_images) ? listing.listing_images : []
                 const firstImage = images[0]
+                const stock = listing.stock_items
                 return (
                   <Link
                     key={listing.id}
@@ -181,8 +184,18 @@ export default async function WorkshopProfilePage({
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center">
-                          <p className="text-xs text-stone-400">No photo</p>
+                        <div className="flex h-full items-center justify-center bg-stone-50 p-4">
+                          <ShapePreviewModal
+                            shapeType={stock?.shape_type ?? 'RECT'}
+                            verticesMm={stock?.vertices_mm ?? null}
+                            lengthMm={listing.length_mm}
+                            widthMm={listing.width_mm}
+                            thicknessMm={listing.thickness_mm ?? 0}
+                            bboxWMm={stock?.bbox_w_mm ?? null}
+                            bboxHMm={stock?.bbox_h_mm ?? null}
+                            thumbnailShowLabels={true}
+                            thumbnailClassName="h-full w-full"
+                          />
                         </div>
                       )}
                     </div>
