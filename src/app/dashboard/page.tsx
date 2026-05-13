@@ -151,6 +151,14 @@ export default async function DashboardPage({
           )}
         </div>
 
+        {/* Explainer */}
+        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-800">
+          <span className="font-semibold">Your stock is private.</span>{' '}
+          Items in your stock list are only visible to you — other workshops cannot see them.
+          To make an item available to buy on the marketplace, click{' '}
+          <span className="font-semibold">Publish</span> on any In Stock item and set your asking price.
+        </div>
+
         {/* Filter tabs — always visible */}
         <div className="mb-4 flex gap-1">
           {filterTabs.map(tab => (
