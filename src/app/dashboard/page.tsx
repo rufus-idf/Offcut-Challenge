@@ -97,6 +97,12 @@ export default async function DashboardPage({
     { key: 'archived',  label: 'Archived' },
   ]
 
+  // Action pill styles — visual hierarchy for the Actions column
+  const pillGreen   = 'inline-flex items-center rounded-full bg-[#3DBE72] px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-[#2A9E5A] disabled:opacity-60'
+  const pillNeutral = 'inline-flex items-center rounded-full border border-stone-200 bg-white px-2.5 py-1 text-xs font-medium text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-50 disabled:opacity-40'
+  const pillDark    = 'inline-flex items-center rounded-full bg-stone-800 px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-stone-700 disabled:opacity-60'
+  const pillMuted   = 'inline-flex items-center rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-400 transition-colors hover:border-stone-300 hover:text-stone-600 disabled:opacity-40'
+
   return (
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshop?.name} />
@@ -273,47 +279,41 @@ export default async function DashboardPage({
                           {STATUS_LABELS[item.status]}
                         </span>
                       </td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-3">
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           {item.status === 'available' && (
                             <>
-                              <Link
-                                href={`/stock/${item.id}/publish`}
-                                className="text-xs font-medium text-[#2A9E5A] hover:text-[#1C7040]"
-                              >
+                              <Link href={`/stock/${item.id}/publish`} className={pillGreen}>
                                 Publish
                               </Link>
-                              <Link
-                                href={`/stock/${item.id}/edit`}
-                                className="text-xs text-stone-500 hover:text-stone-700"
-                              >
+                              <Link href={`/stock/${item.id}/edit`} className={pillNeutral}>
                                 Edit
                               </Link>
                             </>
                           )}
                           {listing && item.status === 'listed' && (
                             <>
-                              <Link href={`/listings/${listing.id}`} className="text-xs text-stone-500 hover:text-stone-700">
+                              <Link href={`/listings/${listing.id}`} className={pillNeutral}>
                                 View
                               </Link>
-                              <Link href={`/listings/${listing.id}/edit`} className="text-xs text-stone-500 hover:text-stone-700">
+                              <Link href={`/listings/${listing.id}/edit`} className={pillNeutral}>
                                 Edit
                               </Link>
-                              <Link href={`/stock/${item.id}/reduce-qty`} className="text-xs text-stone-500 hover:text-stone-700">
+                              <Link href={`/stock/${item.id}/reduce-qty`} className={pillNeutral}>
                                 Sold some
                               </Link>
                               <form action={unlistItem.bind(null, item.id, listing.id)}>
-                                <SubmitButton pendingText="…" className="text-xs text-stone-500 hover:text-stone-700 disabled:opacity-40">
+                                <SubmitButton pendingText="…" className={pillNeutral}>
                                   Unlist
                                 </SubmitButton>
                               </form>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
-                                <SubmitButton pendingText="…" className="text-xs text-[#2A9E5A] hover:text-[#1C7040] disabled:opacity-40">
+                                <SubmitButton pendingText="…" className={pillDark}>
                                   Mark sold
                                 </SubmitButton>
                               </form>
                               <form action={archiveItem.bind(null, item.id, listing.id)}>
-                                <SubmitButton pendingText="…" className="text-xs text-stone-400 hover:text-stone-600 disabled:opacity-40">
+                                <SubmitButton pendingText="…" className={pillMuted}>
                                   Archive
                                 </SubmitButton>
                               </form>
@@ -321,7 +321,7 @@ export default async function DashboardPage({
                           )}
                           {listing && (item.status === 'sold' || item.status === 'archived') && (
                             <form action={relistItem.bind(null, item.id, listing.id)}>
-                              <SubmitButton pendingText="…" className="text-xs text-green-700 hover:text-green-900 disabled:opacity-40">
+                              <SubmitButton pendingText="…" className={pillGreen}>
                                 Relist
                               </SubmitButton>
                             </form>
