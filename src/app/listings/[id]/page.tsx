@@ -113,7 +113,7 @@ export default async function ListingPage({
 
           {/* Photos */}
           <div className="flex flex-col gap-4">
-            {images.length > 0 ? (
+            {images.length > 0 && (
               <>
                 <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-stone-100">
                   <Image
@@ -156,8 +156,14 @@ export default async function ListingPage({
                   </div>
                 )}
               </>
-            ) : (
-              <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-stone-200 bg-stone-50 p-6">
+            )}
+
+            {/* Shape diagram — always shown so buyers always know exact dimensions */}
+            <div className="rounded-xl border border-stone-200 bg-stone-50">
+              <p className="px-4 pt-3 text-xs font-medium uppercase tracking-wide text-stone-400">
+                Shape &amp; dimensions — click to enlarge
+              </p>
+              <div className="h-56 p-4">
                 <ShapePreviewModal
                   shapeType={shape?.shape_type ?? 'RECT'}
                   verticesMm={shape?.vertices_mm ?? null}
@@ -170,7 +176,7 @@ export default async function ListingPage({
                   thumbnailClassName="h-full w-full"
                 />
               </div>
-            )}
+            </div>
 
             {/* Upload form — owner only */}
             {isOwner && (
@@ -179,12 +185,14 @@ export default async function ListingPage({
                 encType="multipart/form-data"
                 className="rounded-xl border border-stone-200 bg-white p-4"
               >
-                <p className="mb-3 text-sm font-medium text-stone-700">Add a photo</p>
+                <p className="mb-1 text-sm font-medium text-stone-700">Add photos</p>
+                <p className="mb-3 text-xs text-stone-400">Select multiple files at once to upload them all in one go.</p>
                 <div className="flex gap-3">
                   <input
                     type="file"
                     name="photo"
                     accept="image/jpeg,image/png,image/webp"
+                    multiple
                     required
                     className="flex-1 text-sm text-stone-600 file:mr-3 file:rounded-lg file:border-0 file:bg-stone-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-stone-700 hover:file:bg-stone-200"
                   />
@@ -195,7 +203,7 @@ export default async function ListingPage({
                     Upload
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-stone-400">JPEG, PNG or WebP · max 5MB</p>
+                <p className="mt-2 text-xs text-stone-400">JPEG, PNG or WebP · max 5MB each</p>
               </form>
             )}
           </div>

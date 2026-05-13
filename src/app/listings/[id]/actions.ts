@@ -53,40 +53,45 @@ export async function uploadImage(listingId: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const file = formData.get('photo') as File
+  const files = (formData.getAll('photo') as File[]).filter(f => f.size > 0)
+  if (!files.length) redirect(`/listings/${listingId}?error=No+file+selected`)
 
-  if (!file || file.size === 0) {
-    redirect(`/listings/${listingId}?error=No+file+selected`)
-  }
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    redirect(`/listings/${listingId}?error=Only+JPEG,+PNG,+and+WebP+images+are+accepted`)
-  }
-  if (file.size > MAX_BYTES) {
-    redirect(`/listings/${listingId}?error=Image+must+be+under+5MB`)
-  }
-
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-  const storagePath = `${listingId}/${Date.now()}.${ext}`
-
-  const { error: storageError } = await supabase.storage
-    .from('listing-images')
-    .upload(storagePath, file, { contentType: file.type })
-
-  if (storageError) {
-    redirect(`/listings/${listingId}?error=${encodeURIComponent(storageError.message)}`)
+  for (const file of files) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      redirect(`/listings/${listingId}?error=Only+JPEG,+PNG,+and+WebP+images+are+accepted`)
+    }
+    if (file.size > MAX_BYTES) {
+      redirect(`/listings/${listingId}?error=Each+image+must+be+under+5MB`)
+    }
   }
 
-  // Use existing image count as position so new uploads go to the end
-  const { count } = await supabase
+  // Get current count once so positions are consecutive
+  const { count: existingCount } = await supabase
     .from('listing_images')
     .select('id', { count: 'exact', head: true })
     .eq('listing_id', listingId)
 
-  await supabase.from('listing_images').insert({
-    listing_id: listingId,
-    storage_path: storagePath,
-    position: count ?? 0,
-  })
+  let position = existingCount ?? 0
+
+  for (const file of files) {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    // Random suffix avoids collisions when multiple files share a timestamp
+    const storagePath = `${listingId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`
+
+    const { error: storageError } = await supabase.storage
+      .from('listing-images')
+      .upload(storagePath, file, { contentType: file.type })
+
+    if (storageError) {
+      redirect(`/listings/${listingId}?error=${encodeURIComponent(storageError.message)}`)
+    }
+
+    await supabase.from('listing_images').insert({
+      listing_id: listingId,
+      storage_path: storagePath,
+      position: position++,
+    })
+  }
 
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/listings')
