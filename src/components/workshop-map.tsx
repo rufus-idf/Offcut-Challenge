@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css'
 type Workshop = {
   id: string
   name: string
+  slug: string
   town: string | null
   county: string | null
   lat: number
@@ -37,10 +38,20 @@ export default function WorkshopMap({ workshops }: { workshops: Workshop[] }) {
           }}
         >
           <Popup>
-            <strong>{w.name}</strong>
-            {w.town && (
-              <><br />{[w.town, w.county].filter(Boolean).join(', ')}</>
-            )}
+            <div style={{ minWidth: '140px' }}>
+              <p style={{ fontWeight: 700, marginBottom: '2px' }}>{w.name}</p>
+              {w.town && (
+                <p style={{ color: '#78716c', fontSize: '0.8rem', marginBottom: '6px' }}>
+                  {[w.town, w.county].filter(Boolean).join(', ')}
+                </p>
+              )}
+              <a
+                href={`/workshops/${w.slug}`}
+                style={{ color: '#b45309', fontWeight: 600, fontSize: '0.82rem' }}
+              >
+                View listings →
+              </a>
+            </div>
           </Popup>
         </CircleMarker>
       ))}

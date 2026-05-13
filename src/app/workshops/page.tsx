@@ -18,7 +18,7 @@ export default async function WorkshopsPage() {
 
   const { data: workshops } = await supabase
     .from('workshops')
-    .select('id, name, town, county, lat, lng')
+    .select('id, name, slug, town, county, lat, lng')
     .eq('verification_status', 'approved')
     .not('lat', 'is', null)
     .not('lng', 'is', null)
@@ -42,7 +42,7 @@ export default async function WorkshopsPage() {
           className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
           style={{ height: '620px' }}
         >
-          <WorkshopMapLoader workshops={(workshops ?? []) as { id: string; name: string; town: string | null; county: string | null; lat: number; lng: number }[]} />
+          <WorkshopMapLoader workshops={(workshops ?? []) as { id: string; name: string; slug: string; town: string | null; county: string | null; lat: number; lng: number }[]} />
         </div>
 
         {count === 0 && (

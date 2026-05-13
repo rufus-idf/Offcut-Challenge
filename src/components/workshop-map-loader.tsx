@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 type Workshop = {
   id: string
   name: string
+  slug: string
   town: string | null
   county: string | null
   lat: number
