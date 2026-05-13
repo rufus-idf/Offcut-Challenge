@@ -157,8 +157,18 @@ export default async function ListingPage({
                 )}
               </>
             ) : (
-              <div className="flex aspect-[4/3] items-center justify-center rounded-xl border-2 border-dashed border-stone-200 bg-stone-100">
-                <p className="text-sm text-stone-400">No photos yet</p>
+              <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-stone-200 bg-stone-50 p-6">
+                <ShapePreviewModal
+                  shapeType={shape?.shape_type ?? 'RECT'}
+                  verticesMm={shape?.vertices_mm ?? null}
+                  lengthMm={typedListing.length_mm}
+                  widthMm={typedListing.width_mm}
+                  thicknessMm={typedListing.thickness_mm}
+                  bboxWMm={shape?.bbox_w_mm ?? null}
+                  bboxHMm={shape?.bbox_h_mm ?? null}
+                  thumbnailShowLabels={true}
+                  thumbnailClassName="h-full w-full"
+                />
               </div>
             )}
 

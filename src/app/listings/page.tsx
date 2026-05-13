@@ -6,6 +6,7 @@ import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl, formatDistance } from '@/lib/format'
 import { CATEGORIES, ALL_MATERIALS, ALL_FINISHES } from '@/lib/constants'
 import { SHAPE_LABELS } from '@/components/shape-preview'
+import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import { geocodePostcode, haversineKm } from '@/lib/geocode'
 import type { ListingWithWorkshop } from '@/lib/types'
 
@@ -60,7 +61,7 @@ export default async function BrowsePage({
 
   let query = supabase
     .from('listings')
-    .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type)')
+    .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)')
     .eq('status', 'active')
 
   if (filters.q) {
@@ -230,8 +231,10 @@ export default async function BrowsePage({
             {listings.map(listing => {
               const firstImage = [...listing.listing_images]
                 .sort((a, b) => a.position - b.position)[0]
-              const stockSnap = (listing as unknown as { stock_items: { shape_type: string } | { shape_type: string }[] | null }).stock_items
-              const shapeType = Array.isArray(stockSnap) ? stockSnap[0]?.shape_type : stockSnap?.shape_type
+              type StockSnap = { shape_type: string; vertices_mm: number[][] | null; bbox_w_mm: number | null; bbox_h_mm: number | null }
+              const rawSnap = (listing as unknown as { stock_items: StockSnap | StockSnap[] | null }).stock_items
+              const stock = Array.isArray(rawSnap) ? (rawSnap[0] ?? null) : rawSnap
+              const shapeType = stock?.shape_type
 
               return (
                 <Link
@@ -249,9 +252,18 @@ export default async function BrowsePage({
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
-                      <div className="flex h-full flex-col items-center justify-center gap-1">
-                        <span className="text-xs font-medium uppercase tracking-wide text-stone-400">{listing.category}</span>
-                        <span className="text-sm text-stone-400">{listing.material}</span>
+                      <div className="flex h-full items-center justify-center bg-stone-50 p-4">
+                        <ShapePreviewModal
+                          shapeType={stock?.shape_type ?? 'RECT'}
+                          verticesMm={stock?.vertices_mm ?? null}
+                          lengthMm={listing.length_mm}
+                          widthMm={listing.width_mm}
+                          thicknessMm={listing.thickness_mm}
+                          bboxWMm={stock?.bbox_w_mm ?? null}
+                          bboxHMm={stock?.bbox_h_mm ?? null}
+                          thumbnailShowLabels={true}
+                          thumbnailClassName="h-full w-full"
+                        />
                       </div>
                     )}
                   </div>
