@@ -283,6 +283,9 @@ export default async function DashboardPage({
                               <Link href={`/listings/${listing.id}/edit`} className="text-xs text-stone-500 hover:text-stone-700">
                                 Edit
                               </Link>
+                              <Link href={`/stock/${item.id}/reduce-qty`} className="text-xs text-stone-500 hover:text-stone-700">
+                                Sold some
+                              </Link>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
                                 <button type="submit" className="text-xs text-amber-700 hover:text-amber-900">
                                   Mark sold

@@ -29,7 +29,7 @@ type ListingDetail = {
   price_pence: number
   description: string | null
   status: string
-  workshops: { name: string; town: string | null; county: string | null }
+  workshops: { name: string; slug: string; town: string | null; county: string | null }
   listing_images: { id: string; storage_path: string; position: number }[]
   stock_items: StockShape | null
 }
@@ -51,7 +51,7 @@ export default async function ListingPage({
   const [{ data: listing }, { data: profile }] = await Promise.all([
     supabase
       .from('listings')
-      .select('*, workshops(name, town, county), listing_images(id, storage_path, position), stock_items(shape_type, vertices_mm, svg_path_data, bbox_w_mm, bbox_h_mm)')
+      .select('*, workshops(name, slug, town, county), listing_images(id, storage_path, position), stock_items(shape_type, vertices_mm, svg_path_data, bbox_w_mm, bbox_h_mm)')
       .eq('id', id)
       .single(),
     supabase
@@ -62,6 +62,18 @@ export default async function ListingPage({
   ])
 
   if (!listing) notFound()
+
+  // Fetch more listings from the same workshop (excluding this one)
+  const { data: moreRaw } = await supabase
+    .from('listings')
+    .select('id, material, finish, price_pence, length_mm, width_mm, thickness_mm, listing_images(storage_path, position)')
+    .eq('workshop_id', listing.workshop_id)
+    .eq('status', 'active')
+    .neq('id', id)
+    .order('created_at', { ascending: false })
+    .limit(4)
+
+  const moreListings = moreRaw ?? []
 
   if (!profile?.workshop_id) redirect('/onboarding')
 
@@ -219,7 +231,11 @@ export default async function ListingPage({
                 </div>
                 <div className="flex justify-between py-2.5">
                   <dt className="text-stone-500">Sold by</dt>
-                  <dd className="font-medium text-stone-900">{typedListing.workshops.name}</dd>
+                  <dd className="font-medium text-stone-900">
+                    <Link href={`/workshops/${typedListing.workshops.slug}`} className="hover:text-amber-700 hover:underline">
+                      {typedListing.workshops.name}
+                    </Link>
+                  </dd>
                 </div>
                 {typedListing.workshops.town && (
                   <div className="flex justify-between py-2.5">
@@ -247,6 +263,56 @@ export default async function ListingPage({
           </div>
 
         </div>
+
+        {/* More from this workshop */}
+        {moreListings.length > 0 && (
+          <div className="mt-12">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-stone-900">
+                More from {typedListing.workshops.name}
+              </h2>
+              <Link
+                href={`/workshops/${typedListing.workshops.slug}`}
+                className="text-sm text-amber-700 hover:underline"
+              >
+                View all →
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {moreListings.map((item: any) => {
+                const imgs = [...(item.listing_images ?? [])].sort((a: any, b: any) => a.position - b.position)
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/listings/${item.id}`}
+                    className="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <div className="relative aspect-[4/3] bg-stone-100">
+                      {imgs[0] ? (
+                        <Image
+                          src={getImageUrl(imgs[0].storage_path)}
+                          alt={`${item.material} ${item.finish}`}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                          sizes="25vw"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <p className="text-xs text-stone-400">{item.material}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="font-semibold text-stone-900 group-hover:text-amber-700 transition-colors">{item.material}</p>
+                      <p className="text-xs text-stone-500">{item.finish}</p>
+                      <p className="mt-1 font-bold text-amber-700">{formatPrice(item.price_pence)}</p>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

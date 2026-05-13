@@ -15,10 +15,12 @@ export default async function BrowsePage({
   searchParams,
 }: {
   searchParams: Promise<{
+    q?: string
     category?: string
     material?: string
     finish?: string
     max_price?: string
+    sort?: string
     town?: string
     postcode?: string
   }>
@@ -61,6 +63,10 @@ export default async function BrowsePage({
     .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type)')
     .eq('status', 'active')
 
+  if (filters.q) {
+    const q = filters.q.trim().replace(/[%_]/g, '')
+    query = query.or(`material.ilike.%${q}%,finish.ilike.%${q}%,description.ilike.%${q}%`)
+  }
   if (filters.category)  query = query.eq('category', filters.category)
   if (filters.material)  query = query.eq('material', filters.material)
   if (filters.finish)    query = query.eq('finish', filters.finish)
@@ -71,7 +77,12 @@ export default async function BrowsePage({
       : query.in('workshop_id', ['00000000-0000-0000-0000-000000000000'])
   }
 
-  const { data: raw } = await query.order('created_at', { ascending: false })
+  // Sort — distance overrides when a valid postcode is given
+  if (filters.sort === 'price_asc')  query = query.order('price_pence', { ascending: true })
+  else if (filters.sort === 'price_desc') query = query.order('price_pence', { ascending: false })
+  else query = query.order('created_at', { ascending: false })
+
+  const { data: raw } = await query
 
   // Attach distances, then sort nearest-first when a valid postcode was given
   const listings: ListingWithDist[] = (raw ?? [] as ListingWithWorkshop[]).map(l => {
@@ -86,7 +97,7 @@ export default async function BrowsePage({
   if (userCoords) listings.sort((a, b) => a._distKm - b._distKm)
 
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
-  const hasFilters = !!(filters.category || filters.material || filters.finish || filters.max_price || filters.town || filters.postcode)
+  const hasFilters = !!(filters.q || filters.category || filters.material || filters.finish || filters.max_price || filters.town || filters.postcode || filters.sort)
   const towns = [...new Set(listings.map(l => l.workshops.town).filter((t): t is string => !!t))].sort()
 
   const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
@@ -108,6 +119,25 @@ export default async function BrowsePage({
 
         {/* Filters */}
         <form method="get" className="mb-8 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4">
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-stone-500">Search</label>
+            <input
+              type="text" name="q"
+              defaultValue={filters.q ?? ''} placeholder="e.g. 18mm MDF, oak…"
+              className={`${selectClass} w-48`}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-stone-500">Sort by</label>
+            <select name="sort" defaultValue={filters.sort ?? ''} className={selectClass}>
+              <option value="">Newest first</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+            </select>
+          </div>
+
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-stone-500">Category</label>
             <select name="category" defaultValue={filters.category ?? ''} className={selectClass}>
@@ -180,7 +210,8 @@ export default async function BrowsePage({
 
         <p className="mb-4 text-sm text-stone-500">
           {listings.length} listing{listings.length !== 1 ? 's' : ''}
-          {userCoords ? ' · sorted nearest first' : hasFilters ? ' matching your filters' : ''}
+          {filters.q ? ` matching "${filters.q}"` : ''}
+          {userCoords ? ' · sorted nearest first' : filters.sort === 'price_asc' ? ' · price low to high' : filters.sort === 'price_desc' ? ' · price high to low' : ''}
         </p>
 
         {!listings.length ? (
