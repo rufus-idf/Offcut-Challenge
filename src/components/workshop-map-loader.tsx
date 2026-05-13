@@ -12,11 +12,14 @@ type Workshop = {
   lng: number
 }
 
-// Dynamic import lives in a Client Component — this is the correct pattern for
-// libraries that need browser APIs (window/document). Turbopack requires ssr:false
-// to be inside a 'use client' file, not a Server Component page.
 const WorkshopMap = dynamic(() => import('./workshop-map'), { ssr: false })
 
-export function WorkshopMapLoader({ workshops }: { workshops: Workshop[] }) {
-  return <WorkshopMap workshops={workshops} />
+export function WorkshopMapLoader({
+  workshops,
+  focusedId,
+}: {
+  workshops: Workshop[]
+  focusedId: string | null
+}) {
+  return <WorkshopMap workshops={workshops} focusedId={focusedId} />
 }

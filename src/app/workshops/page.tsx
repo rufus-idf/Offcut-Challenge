@@ -3,7 +3,7 @@ export const metadata = { title: 'Workshop Map' }
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
-import { WorkshopMapLoader } from '@/components/workshop-map-loader'
+import { WorkshopsClient } from './workshops-client'
 
 export default async function WorkshopsPage() {
   const supabase = await createClient()
@@ -18,15 +18,15 @@ export default async function WorkshopsPage() {
 
   if (!profile?.workshop_id) redirect('/onboarding')
 
+  // Fetch all verified workshops — map filters to those with coordinates,
+  // the list shows everyone
   const { data: workshops } = await supabase
     .from('workshops')
     .select('id, name, slug, town, county, lat, lng')
     .eq('verification_status', 'approved')
-    .not('lat', 'is', null)
-    .not('lng', 'is', null)
+    .order('name')
 
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
-  const count = workshops?.length ?? 0
 
   return (
     <div className="min-h-screen bg-[#FAF9F7]">
@@ -34,24 +34,13 @@ export default async function WorkshopsPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-stone-900">Workshop map</h1>
+          <h1 className="text-2xl font-bold text-stone-900">Workshops</h1>
           <p className="mt-1 text-sm text-stone-500">
-            {count} verified workshop{count !== 1 ? 's' : ''} across the UK
+            Find verified UK workshops and browse their available offcuts
           </p>
         </div>
 
-        <div
-          className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
-          style={{ height: '620px' }}
-        >
-          <WorkshopMapLoader workshops={(workshops ?? []) as { id: string; name: string; slug: string; town: string | null; county: string | null; lat: number; lng: number }[]} />
-        </div>
-
-        {count === 0 && (
-          <p className="mt-4 text-center text-sm text-stone-400">
-            No workshops with a verified location yet. Locations appear once a workshop completes verification.
-          </p>
-        )}
+        <WorkshopsClient workshops={workshops ?? []} />
       </main>
     </div>
   )
