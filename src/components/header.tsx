@@ -24,6 +24,9 @@ export function Header({ email, workshopName }: HeaderProps) {
             <Link href="/workshops" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
               Map
             </Link>
+            <Link href="/settings" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+              Settings
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-6">

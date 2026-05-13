@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
-import { formatPrice, formatDimensions, getImageUrl } from '@/lib/format'
+import { formatPrice, formatDimensions, getImageUrl, getLogoUrl } from '@/lib/format'
 import Image from 'next/image'
 
 type Workshop = {
@@ -13,6 +13,8 @@ type Workshop = {
   county: string | null
   verification_status: string
   created_at: string
+  logo_url: string | null
+  website_url: string | null
 }
 
 type ListingRow = {
@@ -42,7 +44,7 @@ export default async function WorkshopProfilePage({
   const [{ data: workshop }, { data: profile }] = await Promise.all([
     supabase
       .from('workshops')
-      .select('id, name, slug, town, county, verification_status, created_at')
+      .select('id, name, slug, town, county, verification_status, created_at, logo_url, website_url')
       .eq('slug', slug)
       .eq('verification_status', 'approved')
       .single(),
@@ -80,18 +82,55 @@ export default async function WorkshopProfilePage({
 
         {/* Workshop header */}
         <div className="mb-8 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-stone-900">{workshop.name}</h1>
-              {location && <p className="mt-1 text-stone-500">{location}</p>}
-              <p className="mt-1 text-xs text-stone-400">Member since {memberSince}</p>
+          <div className="flex items-start gap-5">
+            {/* Logo */}
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-stone-50">
+              {workshop.logo_url ? (
+                <Image
+                  src={getLogoUrl(workshop.logo_url)}
+                  alt={`${workshop.name} logo`}
+                  fill
+                  className="object-contain p-1"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <span className="text-2xl font-bold text-stone-300">
+                    {workshop.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                Verified workshop
-              </span>
-              {isOwnProfile && (
-                <span className="text-xs text-stone-400">This is your workshop</span>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-stone-900">{workshop.name}</h1>
+                  {location && <p className="mt-0.5 text-stone-500">{location}</p>}
+                  <p className="mt-0.5 text-xs text-stone-400">Member since {memberSince}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                    Verified
+                  </span>
+                  {isOwnProfile && (
+                    <Link href="/settings" className="text-xs text-amber-700 hover:underline">
+                      Edit profile
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {workshop.website_url && (
+                <a
+                  href={workshop.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-sm text-amber-700 hover:underline"
+                >
+                  {workshop.website_url.replace(/^https?:\/\//, '')}
+                  <span className="text-xs">↗</span>
+                </a>
               )}
             </div>
           </div>
@@ -101,7 +140,9 @@ export default async function WorkshopProfilePage({
         <div>
           <h2 className="mb-4 text-lg font-semibold text-stone-900">
             Active listings
-            <span className="ml-2 text-base font-normal text-stone-400">({typedListings.length})</span>
+            <span className="ml-2 text-base font-normal text-stone-400">
+              ({typedListings.length} {typedListings.length === 1 ? 'item' : 'items'})
+            </span>
           </h2>
 
           {typedListings.length === 0 ? (
