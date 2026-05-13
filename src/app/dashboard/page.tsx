@@ -5,10 +5,14 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
+import Image from 'next/image'
+import { StockSearch } from './stock-search'
 import { markAsSold, archiveItem, relistItem, unlistItem } from './actions'
 import { SubmitButton } from '@/components/submit-button'
+import { ConfirmButton } from '@/components/confirm-button'
 import { SHAPE_LABELS } from '@/components/shape-preview'
 import { ShapePreviewModal } from '@/components/shape-preview-modal'
+import { getImageUrl } from '@/lib/format'
 import type { StockItem } from '@/lib/types'
 
 const STATUS_STYLES: Record<StockItem['status'], string> = {
@@ -34,13 +38,17 @@ type WorkshopDetails = {
   rejection_reason: string | null
 }
 
-type ListingRef = { id: string; price_pence: number; quantity: number; status: string }
-type StockWithListing = StockItem & { listings: ListingRef | ListingRef[] | null }
+type ListingRef  = { id: string; price_pence: number; quantity: number; status: string }
+type StockImage  = { storage_path: string; position: number }
+type StockWithListing = StockItem & {
+  listings:     ListingRef  | ListingRef[]  | null
+  stock_images: StockImage  | StockImage[]  | null
+}
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; filter?: string; page?: string }>
+  searchParams: Promise<{ message?: string; filter?: string; page?: string; q?: string }>
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -55,7 +63,7 @@ export default async function DashboardPage({
   if (!profile?.workshop_id) redirect('/onboarding')
 
   const workshop = profile.workshops as unknown as WorkshopDetails | null
-  const { message, filter, page: pageParam } = await searchParams
+  const { message, filter, page: pageParam, q: searchQuery } = await searchParams
   const activeFilter = filter ?? 'all'
   const PAGE_SIZE = 30
   const page = Math.max(1, parseInt(pageParam ?? '1', 10))
@@ -63,7 +71,7 @@ export default async function DashboardPage({
 
   let stockQuery = supabase
     .from('stock_items')
-    .select('*, listings(id, price_pence, quantity, status)', { count: 'exact' })
+    .select('*, listings(id, price_pence, quantity, status), stock_images(storage_path, position)', { count: 'exact' })
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
 
@@ -71,6 +79,10 @@ export default async function DashboardPage({
   if (activeFilter === 'available') stockQuery = stockQuery.eq('status', 'available')
   if (activeFilter === 'sold')      stockQuery = stockQuery.eq('status', 'sold')
   if (activeFilter === 'archived')  stockQuery = stockQuery.eq('status', 'archived')
+  if (searchQuery) {
+    const q = searchQuery.trim().replace(/[%_]/g, '')
+    stockQuery = stockQuery.or(`material.ilike.%${q}%,finish.ilike.%${q}%,category.ilike.%${q}%,description.ilike.%${q}%`)
+  }
 
   const { data: rawItems, count: totalItems } = await stockQuery.range(offset, offset + PAGE_SIZE - 1)
   const totalPages = Math.max(1, Math.ceil((totalItems ?? 0) / PAGE_SIZE))
@@ -78,15 +90,24 @@ export default async function DashboardPage({
   const dashPageUrl = (p: number) => {
     const sp = new URLSearchParams()
     if (activeFilter !== 'all') sp.set('filter', activeFilter)
-    if (p > 1) sp.set('page', String(p))
+    if (searchQuery)            sp.set('q', searchQuery)
+    if (p > 1)                  sp.set('page', String(p))
     const qs = sp.toString()
     return `/dashboard${qs ? `?${qs}` : ''}`
   }
 
-  // Normalise the listings join — Supabase returns array for has-many
+  const tabUrl = (key: string) => {
+    const sp = new URLSearchParams()
+    if (key !== 'all') sp.set('filter', key)
+    if (searchQuery)   sp.set('q', searchQuery)
+    return `/dashboard${sp.toString() ? `?${sp}` : ''}`
+  }
+
+  // Normalise has-many joins from Supabase
   const stockItems: StockWithListing[] = (rawItems ?? []).map(item => ({
     ...item,
-    listings: Array.isArray(item.listings) ? (item.listings[0] ?? null) : item.listings,
+    listings:     Array.isArray(item.listings)     ? (item.listings[0]     ?? null) : item.listings,
+    stock_images: Array.isArray(item.stock_images) ? item.stock_images               : (item.stock_images ? [item.stock_images] : []),
   }))
 
   const filterTabs = [
@@ -172,12 +193,15 @@ export default async function DashboardPage({
           <span className="font-semibold">Publish</span> on any In Stock item and set your asking price.
         </div>
 
-        {/* Filter tabs — always visible */}
+        {/* Stock search */}
+        <StockSearch initialValue={searchQuery ?? ''} activeFilter={activeFilter} />
+
+        {/* Filter tabs */}
         <div className="mb-4 flex gap-1">
           {filterTabs.map(tab => (
             <Link
               key={tab.key}
-              href={tab.key === 'all' ? '/dashboard' : `/dashboard?filter=${tab.key}`}
+              href={tabUrl(tab.key)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 activeFilter === tab.key
                   ? 'bg-stone-900 text-white'
@@ -223,26 +247,43 @@ export default async function DashboardPage({
               <tbody className="divide-y divide-stone-100">
                 {stockItems.map(item => {
                   const listing = item.listings as ListingRef | null
+                  const images  = (item.stock_images as StockImage[] | null) ?? []
+                  const firstPhoto = [...images].sort((a, b) => a.position - b.position)[0] ?? null
                   return (
                     <tr key={item.id} className="hover:bg-stone-50">
                       <td className="px-3 py-2">
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="h-12 w-16">
-                          <ShapePreviewModal
-                            shapeType={item.shape_type}
-                            verticesMm={item.vertices_mm}
-                            lengthMm={item.length_mm}
-                            widthMm={item.width_mm}
-                            thicknessMm={item.thickness_mm}
-                            bboxWMm={item.bbox_w_mm}
-                            bboxHMm={item.bbox_h_mm}
-                          />
+                        <div className="flex items-center gap-2">
+                          {/* Photo thumbnail — shown first when available */}
+                          {firstPhoto && (
+                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
+                              <Image
+                                src={getImageUrl(firstPhoto.storage_path)}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                              />
+                            </div>
+                          )}
+                          {/* Shape SVG — always shown */}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <div className="h-10 w-14">
+                              <ShapePreviewModal
+                                shapeType={item.shape_type}
+                                verticesMm={item.vertices_mm}
+                                lengthMm={item.length_mm}
+                                widthMm={item.width_mm}
+                                thicknessMm={item.thickness_mm}
+                                bboxWMm={item.bbox_w_mm}
+                                bboxHMm={item.bbox_h_mm}
+                              />
+                            </div>
+                            <span className="text-xs text-stone-400">
+                              {SHAPE_LABELS[item.shape_type] ?? item.shape_type}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-xs text-stone-400">
-                          {SHAPE_LABELS[item.shape_type] ?? item.shape_type}
-                        </span>
-                      </div>
-                    </td>
+                      </td>
                     <td className="px-5 py-3">
                         {listing ? (
                           <Link href={`/listings/${listing.id}`} className="hover:underline">
@@ -305,16 +346,16 @@ export default async function DashboardPage({
                                   Unlist
                                 </SubmitButton>
                               </form>
-                              <form action={markAsSold.bind(null, item.id, listing.id)}>
-                                <SubmitButton pendingText="…" className={pillDark}>
-                                  Mark sold
-                                </SubmitButton>
-                              </form>
-                              <form action={archiveItem.bind(null, item.id, listing.id)}>
-                                <SubmitButton pendingText="…" className={pillMuted}>
-                                  Archive
-                                </SubmitButton>
-                              </form>
+                              <ConfirmButton
+                                action={markAsSold.bind(null, item.id, listing.id)}
+                                label="Mark sold"
+                                className={pillDark}
+                              />
+                              <ConfirmButton
+                                action={archiveItem.bind(null, item.id, listing.id)}
+                                label="Archive"
+                                className={pillMuted}
+                              />
                             </>
                           )}
                           {listing && (item.status === 'sold' || item.status === 'archived') && (
