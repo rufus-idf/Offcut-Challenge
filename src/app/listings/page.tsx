@@ -153,10 +153,10 @@ export default async function BrowsePage({
     return `/listings${qs ? `?${qs}` : ''}`
   }
 
-  const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+  const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
@@ -164,7 +164,7 @@ export default async function BrowsePage({
           <h1 className="text-2xl font-bold text-stone-900">Browse listings</h1>
           <Link
             href="/listings/new"
-            className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
+            className="rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
           >
             + New listing
           </Link>
@@ -250,7 +250,7 @@ export default async function BrowsePage({
               name="hide_own"
               value="1"
               defaultChecked={filters.hide_own === '1'}
-              className="h-4 w-4 rounded border-stone-300 accent-amber-700"
+              className="h-4 w-4 rounded border-stone-300 accent-[#3DBE72]"
             />
             <span className="whitespace-nowrap text-sm text-stone-600">Hide my listings</span>
           </label>
@@ -267,7 +267,7 @@ export default async function BrowsePage({
         </form>
 
         {postcodeInvalid && (
-          <p className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <p className="mb-4 rounded-lg bg-[#E8F7EE] px-4 py-3 text-sm text-[#2A9E5A]">
             Postcode &ldquo;{filters.postcode}&rdquo; wasn&apos;t recognised — showing all results instead.
           </p>
         )}
@@ -285,7 +285,7 @@ export default async function BrowsePage({
               {hasFilters ? 'No listings match those filters.' : 'No listings yet. Be the first to post one.'}
             </p>
             {!hasFilters && (
-              <Link href="/listings/new" className="mt-4 inline-block rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
+              <Link href="/listings/new" className="mt-4 inline-block rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A]">
                 Post a listing
               </Link>
             )}
@@ -340,7 +340,7 @@ export default async function BrowsePage({
                         <p className="text-sm text-stone-500">{listing.finish}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-amber-700">{formatPrice(listing.price_pence)}</p>
+                        <p className="font-bold text-[#2A9E5A]">{formatPrice(listing.price_pence)}</p>
                         <p className="text-xs text-stone-400">per piece</p>
                       </div>
                     </div>
@@ -359,7 +359,7 @@ export default async function BrowsePage({
                           </p>
                         )}
                         {userCoords && listing._distKm !== Infinity && (
-                          <p className="mt-0.5 text-xs font-medium text-amber-700">
+                          <p className="mt-0.5 text-xs font-medium text-[#2A9E5A]">
                             {formatDistance(listing._distKm)}
                           </p>
                         )}
@@ -367,7 +367,7 @@ export default async function BrowsePage({
                       <div className="flex items-center gap-1.5">
                         <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
                         {shapeType && shapeType !== 'RECT' && (
-                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                          <span className="rounded-full bg-[#E8F7EE] px-2 py-0.5 text-xs text-[#2A9E5A]">
                             {SHAPE_LABELS[shapeType] ?? shapeType}
                           </span>
                         )}

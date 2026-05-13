@@ -30,7 +30,7 @@ export default async function NewListingPage({
   const workshopName = workshop?.name
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
       <main className="mx-auto max-w-2xl px-6 py-10">
         <h1 className="mb-2 text-2xl font-bold text-stone-900">Add to my stock</h1>

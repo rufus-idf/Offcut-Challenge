@@ -29,7 +29,7 @@ export default async function WorkshopsPage() {
   const count = workshops?.length ?? 0
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
       <main className="mx-auto max-w-7xl px-6 py-10">

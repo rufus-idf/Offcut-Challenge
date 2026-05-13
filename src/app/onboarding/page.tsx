@@ -50,13 +50,13 @@ export default async function OnboardingPage({
                 type="text"
                 required
                 placeholder="e.g. Timber & Co, Bristol"
-                className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+                className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20"
               />
             </div>
 
             <button
               type="submit"
-              className="mt-2 rounded-lg bg-amber-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
+              className="mt-2 rounded-lg bg-[#3DBE72] px-4 py-2.5 font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
             >
               Continue
             </button>

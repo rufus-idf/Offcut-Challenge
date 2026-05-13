@@ -8,7 +8,7 @@ import { getLogoUrl } from '@/lib/format'
 import { updateWebsiteUrl, uploadLogo, removeLogo } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 
-const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
 export default async function SettingsPage({
   searchParams,
@@ -45,7 +45,7 @@ export default async function SettingsPage({
   const removeAction  = removeLogo.bind(null, workshop.id)
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshop.name} />
 
       <main className="mx-auto max-w-lg px-6 py-10">
@@ -105,7 +105,7 @@ export default async function SettingsPage({
               />
               <SubmitButton
                 pendingText="Uploading…"
-                className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-60"
+                className="rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A] disabled:opacity-60"
               >
                 Upload
               </SubmitButton>
@@ -137,7 +137,7 @@ export default async function SettingsPage({
             <div>
               <SubmitButton
                 pendingText="Saving…"
-                className="rounded-lg bg-amber-700 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-60"
+                className="rounded-lg bg-[#3DBE72] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A] disabled:opacity-60"
               >
                 Save
               </SubmitButton>
@@ -148,7 +148,7 @@ export default async function SettingsPage({
         {workshop.verification_status === 'approved' && (
           <p className="mt-4 text-center text-xs text-stone-400">
             Your public profile:{' '}
-            <a href={`/workshops/${workshop.slug}`} className="text-amber-700 hover:underline">
+            <a href={`/workshops/${workshop.slug}`} className="text-[#2A9E5A] hover:underline">
               /workshops/{workshop.slug}
             </a>
           </p>

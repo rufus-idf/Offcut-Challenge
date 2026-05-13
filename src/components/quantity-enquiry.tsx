@@ -62,7 +62,7 @@ export function QuantityEnquiry({
         <input type="hidden" name="quantity" value={qty} />
         <SubmitButton
           pendingText="Sending…"
-          className="w-full rounded-lg bg-amber-700 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800 disabled:opacity-60"
+          className="w-full rounded-lg bg-[#3DBE72] py-2.5 font-semibold text-white transition-colors hover:bg-[#2A9E5A] disabled:opacity-60"
         >
           Send enquiry →
         </SubmitButton>

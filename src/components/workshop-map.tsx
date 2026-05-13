@@ -31,8 +31,8 @@ export default function WorkshopMap({ workshops }: { workshops: Workshop[] }) {
           center={[w.lat, w.lng]}
           radius={10}
           pathOptions={{
-            fillColor: '#b45309',
-            color: '#92400e',
+            fillColor: '#3DBE72',
+            color: '#2A9E5A',
             weight: 2,
             fillOpacity: 0.85,
           }}
@@ -47,7 +47,7 @@ export default function WorkshopMap({ workshops }: { workshops: Workshop[] }) {
               )}
               <a
                 href={`/workshops/${w.slug}`}
-                style={{ color: '#b45309', fontWeight: 600, fontSize: '0.82rem' }}
+                style={{ color: '#3DBE72', fontWeight: 600, fontSize: '0.82rem' }}
               >
                 View listings →
               </a>

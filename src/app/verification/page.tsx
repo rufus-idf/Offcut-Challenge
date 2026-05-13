@@ -41,10 +41,10 @@ export default async function VerificationPage({
   const { error } = await searchParams
   const isResubmission = workshop?.verification_status === 'rejected'
 
-  const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+  const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshop?.name} />
 
       <main className="mx-auto max-w-xl px-6 py-10">
@@ -84,7 +84,7 @@ export default async function VerificationPage({
               />
               <p className="text-xs text-stone-400">
                 Find yours at{' '}
-                <a href="https://find-and-update.company-information.service.gov.uk" target="_blank" rel="noopener noreferrer" className="text-amber-700 hover:underline">
+                <a href="https://find-and-update.company-information.service.gov.uk" target="_blank" rel="noopener noreferrer" className="text-[#2A9E5A] hover:underline">
                   find-and-update.company-information.service.gov.uk
                 </a>
               </p>
@@ -142,7 +142,7 @@ export default async function VerificationPage({
                     required
                     defaultValue={workshop?.postcode ?? ''}
                     placeholder="e.g. BS1 4DJ"
-                    className="w-40 rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+                    className="w-40 rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20"
                   />
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default async function VerificationPage({
 
           <button
             type="submit"
-            className="mt-8 w-full rounded-lg bg-amber-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
+            className="mt-8 w-full rounded-lg bg-[#3DBE72] px-4 py-2.5 font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
           >
             {isResubmission ? 'Resubmit application' : 'Submit for review'}
           </button>

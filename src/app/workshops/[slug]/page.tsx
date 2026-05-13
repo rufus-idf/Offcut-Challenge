@@ -83,7 +83,7 @@ export default async function WorkshopProfilePage({
   const memberSince = new Date(workshop.created_at).getFullYear()
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={viewerWorkshopName} />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
@@ -125,7 +125,7 @@ export default async function WorkshopProfilePage({
                     Verified
                   </span>
                   {isOwnProfile && (
-                    <Link href="/settings" className="text-xs text-amber-700 hover:underline">
+                    <Link href="/settings" className="text-xs text-[#2A9E5A] hover:underline">
                       Edit profile
                     </Link>
                   )}
@@ -137,7 +137,7 @@ export default async function WorkshopProfilePage({
                   href={workshop.website_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-1 text-sm text-amber-700 hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-sm text-[#2A9E5A] hover:underline"
                 >
                   {workshop.website_url.replace(/^https?:\/\//, '')}
                   <span className="text-xs">↗</span>
@@ -189,12 +189,12 @@ export default async function WorkshopProfilePage({
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className="font-semibold text-stone-900 group-hover:text-amber-700 transition-colors">
+                          <p className="font-semibold text-stone-900 group-hover:text-[#2A9E5A] transition-colors">
                             {listing.material}
                           </p>
                           <p className="text-sm text-stone-500">{listing.finish}</p>
                         </div>
-                        <p className="shrink-0 font-bold text-amber-700">{formatPrice(listing.price_pence)}</p>
+                        <p className="shrink-0 font-bold text-[#2A9E5A]">{formatPrice(listing.price_pence)}</p>
                       </div>
                       <div className="mt-2 flex items-center justify-between text-xs text-stone-400">
                         {listing.length_mm && listing.width_mm ? (

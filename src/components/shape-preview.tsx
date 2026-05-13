@@ -90,7 +90,7 @@ export function ShapePreview({
       <polygon
         points={points}
         fill="#fef9ee"
-        stroke="#b45309"
+        stroke="#3DBE72"
         strokeWidth={showLabels ? 1.5 : 1}
         strokeLinejoin="round"
       />

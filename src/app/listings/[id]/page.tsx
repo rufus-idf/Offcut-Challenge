@@ -105,7 +105,7 @@ export default async function ListingPage({
   const uploadAction = uploadImage.bind(null, id)
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
@@ -219,7 +219,7 @@ export default async function ListingPage({
                   />
                   <SubmitButton
                     pendingText="Uploading…"
-                    className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-60"
+                    className="rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A] disabled:opacity-60"
                   >
                     Upload
                   </SubmitButton>
@@ -237,13 +237,13 @@ export default async function ListingPage({
                   <h1 className="text-2xl font-bold text-stone-900">{typedListing.material}</h1>
                   <p className="text-stone-500">{typedListing.finish}</p>
                   {isOwner && (
-                    <Link href={`/listings/${id}/edit`} className="mt-1 inline-block text-xs text-amber-700 hover:underline">
+                    <Link href={`/listings/${id}/edit`} className="mt-1 inline-block text-xs text-[#2A9E5A] hover:underline">
                       Edit listing
                     </Link>
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-amber-700">{formatPrice(typedListing.price_pence)}</p>
+                  <p className="text-2xl font-bold text-[#2A9E5A]">{formatPrice(typedListing.price_pence)}</p>
                   <p className="text-xs text-stone-400">per piece</p>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export default async function ListingPage({
                 <div className="flex justify-between py-2.5">
                   <dt className="text-stone-500">Sold by</dt>
                   <dd className="font-medium text-stone-900">
-                    <Link href={`/workshops/${typedListing.workshops.slug}`} className="hover:text-amber-700 hover:underline">
+                    <Link href={`/workshops/${typedListing.workshops.slug}`} className="hover:text-[#2A9E5A] hover:underline">
                       {typedListing.workshops.name}
                     </Link>
                   </dd>
@@ -335,7 +335,7 @@ export default async function ListingPage({
               </h2>
               <Link
                 href={`/workshops/${typedListing.workshops.slug}`}
-                className="text-sm text-amber-700 hover:underline"
+                className="text-sm text-[#2A9E5A] hover:underline"
               >
                 View all →
               </Link>
@@ -365,9 +365,9 @@ export default async function ListingPage({
                       )}
                     </div>
                     <div className="p-3">
-                      <p className="font-semibold text-stone-900 group-hover:text-amber-700 transition-colors">{item.material}</p>
+                      <p className="font-semibold text-stone-900 group-hover:text-[#2A9E5A] transition-colors">{item.material}</p>
                       <p className="text-xs text-stone-500">{item.finish}</p>
-                      <p className="mt-1 font-bold text-amber-700">{formatPrice(item.price_pence)}</p>
+                      <p className="mt-1 font-bold text-[#2A9E5A]">{formatPrice(item.price_pence)}</p>
                     </div>
                   </Link>
                 )

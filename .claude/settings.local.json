@@ -7,7 +7,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(xargs sed -i -e 's/focus:border-amber-600/focus:border-[#3DBE72]/g' -e 's/focus:ring-amber-600/focus:ring-[#3DBE72]/g' -e 's/ring-amber-600/ring-[#3DBE72]/g' -e 's/accent-amber-700/accent-[#3DBE72]/g' -e 's/border-amber-200/border-[#3DBE72]\\\\/20/g' -e 's/border-amber-700/border-[#3DBE72]/g' -e 's/bg-amber-50/bg-[#E8F7EE]/g' -e 's/bg-amber-100/bg-[#E8F7EE]/g' -e 's/bg-amber-700/bg-[#3DBE72]/g' -e 's/bg-amber-800/bg-[#2A9E5A]/g' -e 's/hover:bg-amber-800/hover:bg-[#2A9E5A]/g' -e 's/hover:bg-amber-700/hover:bg-[#3DBE72]/g' -e 's/text-amber-50/text-[#E8F7EE]/g' -e 's/text-amber-200/text-[#E8F7EE]/g' -e 's/text-amber-700/text-[#2A9E5A]/g' -e 's/text-amber-800/text-[#1C7040]/g' -e 's/text-amber-900/text-[#1C7040]/g' -e 's/hover:text-amber-700/hover:text-[#2A9E5A]/g' -e 's/hover:text-amber-800/hover:text-[#2A9E5A]/g' -e 's/hover:text-amber-900/hover:text-[#1C7040]/g')"
     ]
   }
 }

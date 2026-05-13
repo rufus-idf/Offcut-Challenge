@@ -39,7 +39,7 @@ export default async function EditStockPage({
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
       <main className="mx-auto max-w-lg px-6 py-10">

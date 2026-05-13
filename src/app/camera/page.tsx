@@ -36,7 +36,7 @@ export default async function CameraPage({
   const hasPurchased = !!apiKeyRow || purchased === '1'
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
       <main className="mx-auto max-w-3xl px-6 py-10">
@@ -110,21 +110,21 @@ export default async function CameraPage({
           </div>
         ) : (
           /* Purchase CTA — shown before purchase */
-          <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-8 text-center">
-            <p className="text-lg font-semibold text-amber-900">Ready to connect your camera?</p>
+          <div className="rounded-xl border-2 border-[#3DBE72]/20 bg-[#E8F7EE] p-8 text-center">
+            <p className="text-lg font-semibold text-[#1C7040]">Ready to connect your camera?</p>
             <p className="mt-2 text-sm text-stone-600">
               The camera app is available as a separate add-on. Purchase it from our product store
               and your API key will appear here automatically.
             </p>
             <a
               href="https://offcutchallenge.co.uk/camera"
-              className="mt-6 inline-block rounded-lg bg-amber-700 px-8 py-3 font-semibold text-white transition-colors hover:bg-amber-800"
+              className="mt-6 inline-block rounded-lg bg-[#3DBE72] px-8 py-3 font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
             >
               Purchase Camera App →
             </a>
             <p className="mt-3 text-xs text-stone-400">
               Already purchased?{' '}
-              <a href="/camera?purchased=1" className="text-amber-700 hover:underline">
+              <a href="/camera?purchased=1" className="text-[#2A9E5A] hover:underline">
                 Click here to generate your API key
               </a>
             </p>

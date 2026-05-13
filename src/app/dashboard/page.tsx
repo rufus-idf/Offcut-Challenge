@@ -98,19 +98,19 @@ export default async function DashboardPage({
   ]
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshop?.name} />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
 
         {/* Verification banners */}
         {workshop?.verification_status === 'unverified' && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-            <p className="text-sm text-amber-800">
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-[#3DBE72]/20 bg-[#E8F7EE] px-5 py-4">
+            <p className="text-sm text-[#1C7040]">
               <span className="font-semibold">Verification required.</span>{' '}
               Submit your Companies House details to start listing offcuts.
             </p>
-            <Link href="/verification" className="ml-4 shrink-0 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
+            <Link href="/verification" className="ml-4 shrink-0 rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A]">
               Verify now
             </Link>
           </div>
@@ -151,7 +151,7 @@ export default async function DashboardPage({
           {workshop?.verification_status === 'approved' && (
             <Link
               href="/listings/new"
-              className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
+              className="rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
             >
               + Add to my stock
             </Link>
@@ -194,7 +194,7 @@ export default async function DashboardPage({
                   : 'Complete verification to start adding stock.'}
             </p>
             {workshop?.verification_status === 'approved' && activeFilter === 'all' && (
-              <Link href="/listings/new" className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">
+              <Link href="/listings/new" className="rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A]">
                 Add your first item
               </Link>
             )}
@@ -279,7 +279,7 @@ export default async function DashboardPage({
                             <>
                               <Link
                                 href={`/stock/${item.id}/publish`}
-                                className="text-xs font-medium text-amber-700 hover:text-amber-900"
+                                className="text-xs font-medium text-[#2A9E5A] hover:text-[#1C7040]"
                               >
                                 Publish
                               </Link>
@@ -308,7 +308,7 @@ export default async function DashboardPage({
                                 </SubmitButton>
                               </form>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
-                                <SubmitButton pendingText="…" className="text-xs text-amber-700 hover:text-amber-900 disabled:opacity-40">
+                                <SubmitButton pendingText="…" className="text-xs text-[#2A9E5A] hover:text-[#1C7040] disabled:opacity-40">
                                   Mark sold
                                 </SubmitButton>
                               </form>
@@ -360,18 +360,18 @@ export default async function DashboardPage({
         {workshop?.verification_status === 'approved' && (
           <Link
             href="/camera"
-            className="mt-10 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 transition-colors hover:bg-amber-100"
+            className="mt-10 flex items-center justify-between gap-4 rounded-xl border border-[#3DBE72]/20 bg-[#E8F7EE] px-6 py-4 transition-colors hover:bg-[#E8F7EE]"
           >
             <div className="flex items-center gap-4">
               <span className="text-2xl">📷</span>
               <div>
-                <p className="font-semibold text-amber-900">Camera App Integration</p>
-                <p className="text-sm text-amber-700">
+                <p className="font-semibold text-[#1C7040]">Camera App Integration</p>
+                <p className="text-sm text-[#2A9E5A]">
                   Automatically scan and catalogue offcuts directly into your stock — no manual entry needed.
                 </p>
               </div>
             </div>
-            <span className="shrink-0 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white">
+            <span className="shrink-0 rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white">
               Learn more →
             </span>
           </Link>

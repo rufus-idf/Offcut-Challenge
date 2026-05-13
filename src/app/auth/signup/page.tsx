@@ -44,7 +44,7 @@ export default async function SignupPage({
                 type="email"
                 required
                 autoComplete="email"
-                className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+                className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20"
               />
             </div>
 
@@ -59,13 +59,13 @@ export default async function SignupPage({
                 required
                 minLength={6}
                 autoComplete="new-password"
-                className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+                className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20"
               />
             </div>
 
             <button
               type="submit"
-              className="mt-2 rounded-lg bg-amber-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
+              className="mt-2 rounded-lg bg-[#3DBE72] px-4 py-2.5 font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
             >
               Create account
             </button>
@@ -74,7 +74,7 @@ export default async function SignupPage({
 
         <p className="mt-4 text-center text-sm text-stone-500">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-amber-700 hover:text-amber-800">
+          <Link href="/auth/login" className="font-medium text-[#2A9E5A] hover:text-[#1C7040]">
             Log in
           </Link>
         </p>

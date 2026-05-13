@@ -6,7 +6,7 @@ import { createListing } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 
 const inputClass =
-  'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+  'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
 export function ListingForm({ error }: { error?: string }) {
   const [category, setCategory] = useState<Category>('Wood')
@@ -87,7 +87,7 @@ export function ListingForm({ error }: { error?: string }) {
       <div className="mt-8 flex gap-3">
         <SubmitButton
           pendingText="Adding…"
-          className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800 disabled:opacity-60"
+          className="rounded-lg bg-[#3DBE72] px-6 py-2.5 font-semibold text-white transition-colors hover:bg-[#2A9E5A] disabled:opacity-60"
         >
           Add to my stock
         </SubmitButton>

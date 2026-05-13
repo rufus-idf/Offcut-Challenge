@@ -13,7 +13,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-3">
           <Link
             href="/auth/signup"
-            className="rounded-lg bg-amber-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-amber-800"
+            className="rounded-lg bg-[#3DBE72] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
           >
             Apply for access
           </Link>

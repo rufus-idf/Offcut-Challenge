@@ -8,7 +8,7 @@ const ADMIN_EMAIL = 'rufus@i-designfurniture.com'
 
 const STATUS_STYLES: Record<string, string> = {
   unverified: 'bg-stone-100 text-stone-500',
-  pending:    'bg-amber-50 text-amber-700',
+  pending:    'bg-[#E8F7EE] text-[#2A9E5A]',
   approved:   'bg-green-50 text-green-700',
   rejected:   'bg-red-50 text-red-700',
 }
@@ -31,7 +31,7 @@ export default async function AdminPage() {
   const sorted   = [...pending, ...others]
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
@@ -47,7 +47,7 @@ export default async function AdminPage() {
           <div>
             <h1 className="text-2xl font-bold text-stone-900">Workshop applications</h1>
             {pending.length > 0 && (
-              <p className="mt-1 text-sm text-amber-700">{pending.length} pending review</p>
+              <p className="mt-1 text-sm text-[#2A9E5A]">{pending.length} pending review</p>
             )}
           </div>
           <form action={geocodeMissingWorkshops}>
@@ -67,7 +67,7 @@ export default async function AdminPage() {
             {sorted.map(workshop => (
               <div
                 key={workshop.id}
-                className={`rounded-xl border bg-white p-6 shadow-sm ${workshop.verification_status === 'pending' ? 'border-amber-200' : 'border-stone-200'}`}
+                className={`rounded-xl border bg-white p-6 shadow-sm ${workshop.verification_status === 'pending' ? 'border-[#3DBE72]/20' : 'border-stone-200'}`}
               >
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>

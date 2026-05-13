@@ -7,7 +7,7 @@ import { formatDimensions } from '@/lib/format'
 import { reduceQuantity } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 
-const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
 export default async function ReduceQtyPage({
   params,
@@ -48,7 +48,7 @@ export default async function ReduceQtyPage({
   const action = reduceQuantity.bind(null, id, listing.id)
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
 
       <main className="mx-auto max-w-sm px-6 py-10">
@@ -70,7 +70,7 @@ export default async function ReduceQtyPage({
             </p>
           )}
           <p className="mt-2 text-sm font-medium text-stone-700">
-            Current quantity: <span className="text-amber-700">{item.quantity}</span>
+            Current quantity: <span className="text-[#2A9E5A]">{item.quantity}</span>
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export default async function ReduceQtyPage({
           <div className="flex gap-3 pt-1">
             <SubmitButton
               pendingText="Saving…"
-              className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800 disabled:opacity-60"
+              className="rounded-lg bg-[#3DBE72] px-6 py-2.5 font-semibold text-white transition-colors hover:bg-[#2A9E5A] disabled:opacity-60"
             >
               Save
             </SubmitButton>
