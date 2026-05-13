@@ -8,44 +8,53 @@ interface HeaderProps {
 
 export function Header({ email, workshopName }: HeaderProps) {
   return (
-    <header className="border-b border-stone-200 bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="text-lg font-bold text-stone-900">
-            Offcut Challenge
+    <header className="bg-[#1C1C1E] border-b border-white/[0.07]">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+
+        {/* Logo + nav */}
+        <div className="flex items-center gap-10">
+          <Link href="/dashboard" className="text-lg font-bold tracking-tight">
+            <span className="text-white">Offcut</span>
+            <span className="text-[#3DBE72]">Challenge</span>
           </Link>
-          <nav className="flex gap-6">
-            <Link href="/dashboard" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+
+          <nav className="flex items-center gap-7">
+            <Link href="/dashboard" className="text-sm font-medium text-white/70 transition-colors hover:text-white">
               My Stock
             </Link>
-            <Link href="/listings" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+            <Link href="/listings" className="text-sm font-medium text-white/70 transition-colors hover:text-white">
               Browse Listings
             </Link>
-            <Link href="/workshops" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+            <Link href="/workshops" className="text-sm font-medium text-white/70 transition-colors hover:text-white">
               Map
             </Link>
-            <Link href="/camera" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
+            <Link href="/camera" className="text-sm font-medium text-white/70 transition-colors hover:text-white">
               Camera
-            </Link>
-            <Link href="/settings" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
-              Settings
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-6">
+
+        {/* Right — workshop pill + logout */}
+        <div className="flex items-center gap-4">
           {workshopName && (
-            <span className="text-sm font-medium text-stone-700">{workshopName}</span>
+            <Link
+              href="/settings"
+              className="rounded-full bg-[#3DBE72] px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[#2A9E5A]"
+              title="Workshop settings"
+            >
+              {workshopName}
+            </Link>
           )}
-          <span className="text-sm text-stone-400">{email}</span>
           <form action={logout}>
             <button
               type="submit"
-              className="text-sm font-medium text-stone-700 hover:text-stone-900 transition-colors"
+              className="text-sm font-medium text-white/50 transition-colors hover:text-white/90"
             >
               Log out
             </button>
           </form>
         </div>
+
       </div>
     </header>
   )
