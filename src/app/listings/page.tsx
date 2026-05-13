@@ -24,10 +24,15 @@ export default async function BrowsePage({
     finish?: string
     max_price?: string
     sort?: string
-    town?: string
     postcode?: string
     hide_own?: string
     page?: string
+    min_length?: string
+    max_length?: string
+    min_width?: string
+    max_width?: string
+    min_thickness?: string
+    max_thickness?: string
   }>
 }) {
   const filters = await searchParams
@@ -54,17 +59,6 @@ export default async function BrowsePage({
     if (!userCoords) postcodeInvalid = true
   }
 
-  // Resolve town filter to workshop IDs
-  let workshopIdsForTown: string[] | null = null
-  if (filters.town) {
-    const { data: ws } = await supabase
-      .from('workshops')
-      .select('id')
-      .eq('town', filters.town)
-      .eq('verification_status', 'approved')
-    workshopIdsForTown = ws?.map(w => w.id) ?? []
-  }
-
   let query = supabase
     .from('listings')
     .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)', { count: 'exact' })
@@ -85,14 +79,15 @@ export default async function BrowsePage({
   if (filters.material)  query = query.eq('material', filters.material)
   if (filters.finish)    query = query.eq('finish', filters.finish)
   if (filters.max_price) query = query.lte('price_pence', Math.round(parseFloat(filters.max_price) * 100))
-  if (workshopIdsForTown !== null) {
-    query = workshopIdsForTown.length
-      ? query.in('workshop_id', workshopIdsForTown)
-      : query.in('workshop_id', ['00000000-0000-0000-0000-000000000000'])
-  }
   if (filters.hide_own === '1' && profile.workshop_id) {
     query = query.neq('workshop_id', profile.workshop_id)
   }
+  if (filters.min_length)    query = query.gte('length_mm',    parseInt(filters.min_length, 10))
+  if (filters.max_length)    query = query.lte('length_mm',    parseInt(filters.max_length, 10))
+  if (filters.min_width)     query = query.gte('width_mm',     parseInt(filters.min_width, 10))
+  if (filters.max_width)     query = query.lte('width_mm',     parseInt(filters.max_width, 10))
+  if (filters.min_thickness) query = query.gte('thickness_mm', parseInt(filters.min_thickness, 10))
+  if (filters.max_thickness) query = query.lte('thickness_mm', parseInt(filters.max_thickness, 10))
 
   // Sort — distance overrides when a valid postcode is given
   if (filters.sort === 'price_asc')  query = query.order('price_pence', { ascending: true })
@@ -126,29 +121,31 @@ export default async function BrowsePage({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
-  const hasFilters = !!(filters.q || filters.category || filters.material || filters.finish || filters.max_price || filters.town || filters.postcode || filters.sort || filters.hide_own)
-
-  // Towns for the location filter — fetch separately so the dropdown isn't page-limited
-  const { data: townRows } = await supabase
-    .from('workshops')
-    .select('town')
-    .eq('verification_status', 'approved')
-    .not('town', 'is', null)
-  const towns = [...new Set((townRows ?? []).map(r => r.town).filter((t): t is string => !!t))].sort()
+  const hasFilters = !!(
+    filters.q || filters.category || filters.material || filters.finish ||
+    filters.max_price || filters.postcode || filters.sort || filters.hide_own ||
+    filters.min_length || filters.max_length || filters.min_width || filters.max_width ||
+    filters.min_thickness || filters.max_thickness
+  )
 
   // Build a URL with the current filters but a different page
   const paginationUrl = (p: number) => {
     const sp = new URLSearchParams()
-    if (filters.q)         sp.set('q', filters.q)
-    if (filters.category)  sp.set('category', filters.category)
-    if (filters.material)  sp.set('material', filters.material)
-    if (filters.finish)    sp.set('finish', filters.finish)
-    if (filters.max_price) sp.set('max_price', filters.max_price)
-    if (filters.sort)      sp.set('sort', filters.sort)
-    if (filters.town)      sp.set('town', filters.town)
-    if (filters.postcode)  sp.set('postcode', filters.postcode)
-    if (filters.hide_own)  sp.set('hide_own', filters.hide_own)
-    if (p > 1)             sp.set('page', String(p))
+    if (filters.q)            sp.set('q',            filters.q)
+    if (filters.category)     sp.set('category',     filters.category)
+    if (filters.material)     sp.set('material',     filters.material)
+    if (filters.finish)       sp.set('finish',       filters.finish)
+    if (filters.max_price)    sp.set('max_price',    filters.max_price)
+    if (filters.sort)         sp.set('sort',         filters.sort)
+    if (filters.postcode)     sp.set('postcode',     filters.postcode)
+    if (filters.hide_own)     sp.set('hide_own',     filters.hide_own)
+    if (filters.min_length)   sp.set('min_length',   filters.min_length)
+    if (filters.max_length)   sp.set('max_length',   filters.max_length)
+    if (filters.min_width)    sp.set('min_width',    filters.min_width)
+    if (filters.max_width)    sp.set('max_width',    filters.max_width)
+    if (filters.min_thickness) sp.set('min_thickness', filters.min_thickness)
+    if (filters.max_thickness) sp.set('max_thickness', filters.max_thickness)
+    if (p > 1)                sp.set('page',         String(p))
     const qs = sp.toString()
     return `/listings${qs ? `?${qs}` : ''}`
   }
@@ -168,7 +165,7 @@ export default async function BrowsePage({
           </Link>
         </div>
 
-        <ListingsFilters towns={towns} filters={filters} />
+        <ListingsFilters filters={filters} />
 
         {postcodeInvalid && (
           <p className="mb-4 rounded-lg bg-[#E8F7EE] px-4 py-3 text-sm text-[#2A9E5A]">
