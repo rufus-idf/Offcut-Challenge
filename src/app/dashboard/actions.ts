@@ -32,6 +32,21 @@ export async function archiveItem(stockItemId: string, listingId: string, _formD
   revalidatePath('/listings')
 }
 
+export async function unlistItem(stockItemId: string, listingId: string, _formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  // Take off marketplace but keep item in stock (available to publish again)
+  await Promise.all([
+    supabase.from('listings').update({ status: 'archived' }).eq('id', listingId),
+    supabase.from('stock_items').update({ status: 'available' }).eq('id', stockItemId),
+  ])
+
+  revalidatePath('/dashboard')
+  revalidatePath('/listings')
+}
+
 export async function relistItem(stockItemId: string, listingId: string, _formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

@@ -24,9 +24,12 @@ export default async function BrowsePage({
     sort?: string
     town?: string
     postcode?: string
+    page?: string
   }>
 }) {
   const filters = await searchParams
+  const PAGE_SIZE = 24
+  const page = Math.max(1, parseInt(filters.page ?? '1', 10))
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -61,7 +64,7 @@ export default async function BrowsePage({
 
   let query = supabase
     .from('listings')
-    .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)')
+    .select('*, workshops(name, town, county, lat, lng), listing_images(storage_path, position), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)', { count: 'exact' })
     .eq('status', 'active')
 
   if (filters.q) {
@@ -83,23 +86,58 @@ export default async function BrowsePage({
   else if (filters.sort === 'price_desc') query = query.order('price_pence', { ascending: false })
   else query = query.order('created_at', { ascending: false })
 
-  const { data: raw } = await query
+  let totalCount = 0
+  let listings: ListingWithDist[] = []
 
-  // Attach distances, then sort nearest-first when a valid postcode was given
-  const listings: ListingWithDist[] = (raw ?? [] as ListingWithWorkshop[]).map(l => {
-    const w = (l as ListingWithWorkshop).workshops
-    const _distKm =
-      userCoords && w.lat != null && w.lng != null
+  if (userCoords) {
+    // Fetch all for distance sorting, then paginate in JS
+    const { data: raw } = await query
+    const all: ListingWithDist[] = (raw ?? []).map(l => {
+      const w = (l as ListingWithWorkshop).workshops
+      const _distKm = w.lat != null && w.lng != null
         ? haversineKm(userCoords.lat, userCoords.lng, w.lat, w.lng)
         : Infinity
-    return { ...(l as ListingWithWorkshop), _distKm }
-  })
+      return { ...(l as ListingWithWorkshop), _distKm }
+    })
+    all.sort((a, b) => a._distKm - b._distKm)
+    totalCount = all.length
+    listings = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  } else {
+    // Server-side pagination
+    const offset = (page - 1) * PAGE_SIZE
+    const { data: raw, count } = await query.range(offset, offset + PAGE_SIZE - 1)
+    totalCount = count ?? 0
+    listings = (raw ?? []).map(l => ({ ...(l as ListingWithWorkshop), _distKm: Infinity }))
+  }
 
-  if (userCoords) listings.sort((a, b) => a._distKm - b._distKm)
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
   const hasFilters = !!(filters.q || filters.category || filters.material || filters.finish || filters.max_price || filters.town || filters.postcode || filters.sort)
-  const towns = [...new Set(listings.map(l => l.workshops.town).filter((t): t is string => !!t))].sort()
+
+  // Towns for the location filter — fetch separately so the dropdown isn't page-limited
+  const { data: townRows } = await supabase
+    .from('workshops')
+    .select('town')
+    .eq('verification_status', 'approved')
+    .not('town', 'is', null)
+  const towns = [...new Set((townRows ?? []).map(r => r.town).filter((t): t is string => !!t))].sort()
+
+  // Build a URL with the current filters but a different page
+  const paginationUrl = (p: number) => {
+    const sp = new URLSearchParams()
+    if (filters.q)         sp.set('q', filters.q)
+    if (filters.category)  sp.set('category', filters.category)
+    if (filters.material)  sp.set('material', filters.material)
+    if (filters.finish)    sp.set('finish', filters.finish)
+    if (filters.max_price) sp.set('max_price', filters.max_price)
+    if (filters.sort)      sp.set('sort', filters.sort)
+    if (filters.town)      sp.set('town', filters.town)
+    if (filters.postcode)  sp.set('postcode', filters.postcode)
+    if (p > 1)             sp.set('page', String(p))
+    const qs = sp.toString()
+    return `/listings${qs ? `?${qs}` : ''}`
+  }
 
   const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
 
@@ -210,9 +248,10 @@ export default async function BrowsePage({
         )}
 
         <p className="mb-4 text-sm text-stone-500">
-          {listings.length} listing{listings.length !== 1 ? 's' : ''}
+          {totalCount} listing{totalCount !== 1 ? 's' : ''}
           {filters.q ? ` matching "${filters.q}"` : ''}
           {userCoords ? ' · sorted nearest first' : filters.sort === 'price_asc' ? ' · price low to high' : filters.sort === 'price_desc' ? ' · price high to low' : ''}
+          {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
         </p>
 
         {!listings.length ? (
@@ -227,6 +266,7 @@ export default async function BrowsePage({
             )}
           </div>
         ) : (
+          <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {listings.map(listing => {
               const firstImage = [...listing.listing_images]
@@ -313,6 +353,28 @@ export default async function BrowsePage({
               )
             })}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-3">
+              {page > 1 ? (
+                <Link href={paginationUrl(page - 1)} className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50">
+                  ← Previous
+                </Link>
+              ) : (
+                <span className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-300">← Previous</span>
+              )}
+              <span className="text-sm text-stone-500">Page {page} of {totalPages}</span>
+              {page < totalPages ? (
+                <Link href={paginationUrl(page + 1)} className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50">
+                  Next →
+                </Link>
+              ) : (
+                <span className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-300">Next →</span>
+              )}
+            </div>
+          )}
+        </>
         )}
       </main>
     </div>

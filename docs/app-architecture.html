@@ -982,53 +982,57 @@ erDiagram
 
   <!-- ══ 11. ROADMAP ══ -->
   <section id="roadmap">
-    <h2>📅 Build Roadmap</h2>
+    <h2>📅 Build Phases</h2>
+    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:1.2rem">Four sequential phases — each gates the next. Do not skip ahead.</p>
     <div class="card">
       <div class="timeline">
         <div class="tl-item done">
-          <div class="tl-week">Week 1 ✓</div>
-          <div class="tl-title">Foundation</div>
-          <ul class="tl-list"><li>Next.js 15 + Supabase Auth + Vercel deployment</li></ul>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-week">Week 2 ✓</div>
-          <div class="tl-title">Database &amp; Listings</div>
-          <ul class="tl-list"><li>Schema: workshops, profiles, listings + RLS</li><li>Workshop onboarding, create/browse listings</li></ul>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-week">Week 3 ✓</div>
-          <div class="tl-title">Photos, Search, Filters</div>
-          <ul class="tl-list"><li>Supabase Storage for listing photos</li><li>Browse filters: category, material, finish, price, postcode distance</li></ul>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-week">Week 4 ✓</div>
-          <div class="tl-title">Verification, Admin, Map</div>
-          <ul class="tl-list"><li>Companies House API + admin approval panel</li><li>Workshop map (Leaflet), geocoding, Resend email alerts</li></ul>
-        </div>
-        <div class="tl-item now">
-          <div class="tl-week">In Progress ◉</div>
-          <div class="tl-title">Stock / Marketplace Split</div>
-          <ul class="tl-list"><li>stock_items table as canonical inventory</li><li>Dashboard stock view with sold and archive actions</li><li>Camera-ready schema columns present from day one</li></ul>
+          <div class="tl-week">Phase 1 — In progress ◉</div>
+          <div class="tl-title">Full Functionality</div>
+          <ul class="tl-list">
+            <li>✓ Stock/marketplace split (two-step flow, edit, unlist, partial sell)</li>
+            <li>✓ Browse listings: keyword search, price sort, pagination (24/page)</li>
+            <li>✓ Listing detail: multi-photo upload, Set as Cover, shape preview always shown</li>
+            <li>✓ Workshop profiles, map popups, settings (logo, website)</li>
+            <li>✓ Quantity enquiry system with Resend email</li>
+            <li>✓ Camera page with API key management</li>
+            <li>✓ Loading states (SubmitButton), dashboard pagination (30/page)</li>
+            <li>Remaining: Resend custom domain, seller email notifications, page titles, T&amp;Cs</li>
+          </ul>
         </div>
         <div class="tl-item">
-          <div class="tl-week">Week 5</div>
-          <div class="tl-title">Stripe Subscriptions</div>
-          <ul class="tl-list"><li>Stripe Checkout + subscription gate middleware</li><li>Webhook: subscription_status on workshops table</li><li>Apply for Stripe Connect platform access</li></ul>
+          <div class="tl-week">Phase 2</div>
+          <div class="tl-title">Layout, Style &amp; UX Polish</div>
+          <ul class="tl-list">
+            <li>Full visual design pass (typography, spacing, colour system)</li>
+            <li>Page layout and navigation structure</li>
+            <li>Empty states, error pages (404, 500), loading skeletons</li>
+            <li>Accessibility audit</li>
+          </ul>
         </div>
         <div class="tl-item">
-          <div class="tl-week">Week 6</div>
-          <div class="tl-title">Stripe Connect — Transactions</div>
-          <ul class="tl-list"><li>Seller Express account onboarding</li><li>Buy button + PaymentIntent with 95/5 split</li><li>Transaction records in DB</li></ul>
+          <div class="tl-week">Phase 3</div>
+          <div class="tl-title">Stripe Payments</div>
+          <ul class="tl-list">
+            <li>Separate storefront website (Next.js) with Stripe Payment Link</li>
+            <li>Webhook → invite email → £29/mo subscription gate in app</li>
+            <li>Stripe Connect: seller Express onboarding, buy button, 95/5 split</li>
+            <li>Transaction records in DB</li>
+          </ul>
         </div>
         <div class="tl-item">
-          <div class="tl-week">Week 7</div>
-          <div class="tl-title">Messaging, Emails, Polish</div>
-          <ul class="tl-list"><li>Buyer–seller messaging</li><li>Transactional emails via Resend</li><li>Multi-user workshop invites, mobile improvements</li></ul>
+          <div class="tl-week">Phase 4</div>
+          <div class="tl-title">Mobile</div>
+          <ul class="tl-list">
+            <li>Responsive dashboard (table → card layout on small screens)</li>
+            <li>Mobile navigation (hamburger / bottom nav)</li>
+            <li>Touch-friendly interactions, test on real devices</li>
+          </ul>
         </div>
         <div class="tl-item">
-          <div class="tl-week">Week 8</div>
-          <div class="tl-title">Soft Launch</div>
-          <ul class="tl-list"><li>Invite 5–10 real UK workshops</li></ul>
+          <div class="tl-week">Soft Launch</div>
+          <div class="tl-title">Invite 5–10 real UK workshops</div>
+          <ul class="tl-list"><li>Once Phase 3 complete and Phase 4 acceptable</li></ul>
         </div>
       </div>
     </div>

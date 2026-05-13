@@ -260,35 +260,50 @@ Finishes: Raw / unfinished, Coated, Treated
 
 ---
 
-## What's next
+## Build phases
 
-### Immediate — Stripe
-- Register Stripe account (sole trader or Ltd company)
-- Apply for Stripe Connect platform access
+The app is being built in four sequential phases. Do not skip ahead — each phase gates the next.
+
+### Phase 1 — Full functionality (current)
+Get every feature working end-to-end before touching layout or payments.
+The goal is: can the app do everything it needs to do?
+
+**Remaining items:**
+- Fix Resend sender domain (test domain → verified custom domain)
+- Wire enquiry emails to the actual seller, not just admin
+- Page titles / metadata (generateMetadata on each page)
+- Bulk dashboard actions (archive/mark sold multiple items)
+- Terms & Conditions and Privacy Policy pages (legal requirement)
+- Stripe webhook handler skeleton (ready for Phase 3)
+
+### Phase 2 — Layout, style and UX polish
+Once all functionality is in place, do a full design pass:
+- Visual design system (typography, spacing, colour tokens)
+- Page layout and navigation structure
+- Component consistency across the app
+- Empty states, error pages (404, 500)
+- Loading skeletons
+- Accessibility audit
+
+### Phase 3 — Stripe payments
+Only start this after Phase 2 is signed off.
+- Register Stripe account and apply for Connect platform access
 - Build separate marketplace/storefront website (separate Next.js repo)
-- Stripe Payment Link on storefront → webhook in app → invite email via Resend
-
-### Week 5 — Stripe Subscriptions
-- Register Stripe account (sole trader or Ltd company)
-- Apply for Stripe Connect platform access
-- £29/month subscription gate
-- Stripe Checkout + webhook handling
-- subscription_status on workshops table
-
-### Week 6 — Stripe Connect (marketplace transactions)
+- Stripe Payment Link on storefront → webhook → invite email via Resend
+- £29/month subscription gate in app
 - Seller Stripe Express onboarding
-- Buy button + Stripe payment
-- Automatic 95/5 split
+- Buy button + PaymentIntent (95/5 split via Connect)
 - Transaction records in DB
 
-### Week 7 — Messaging, emails, polish
-- Buyer-seller messaging
-- Transactional emails via Resend
-- Multi-user workshop invites
-- Mobile layout improvements
+### Phase 4 — Mobile
+Full mobile layout pass after desktop is stable and payments are live.
+- Responsive dashboard (currently table-based, breaks on small screens)
+- Mobile navigation (hamburger / bottom nav)
+- Touch-friendly interactions (larger tap targets, swipe gestures)
+- Test on real devices before soft launch
 
-### Week 8 — Soft launch
-- Invite 5–10 real workshops
+### Soft launch
+Invite 5–10 real UK workshops once Phase 3 is complete and Phase 4 is acceptable.
 
 ---
 

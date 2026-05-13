@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatPrice } from '@/lib/format'
 import { enquireListing } from '@/app/listings/[id]/actions'
+import { SubmitButton } from '@/components/submit-button'
 
 export function QuantityEnquiry({
   listingId,
@@ -59,12 +60,12 @@ export function QuantityEnquiry({
       <form action={enquireListing}>
         <input type="hidden" name="listing_id" value={listingId} />
         <input type="hidden" name="quantity" value={qty} />
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-amber-700 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
+        <SubmitButton
+          pendingText="Sending…"
+          className="w-full rounded-lg bg-amber-700 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800 disabled:opacity-60"
         >
           Send enquiry →
-        </button>
+        </SubmitButton>
       </form>
       <p className="mt-2 text-center text-xs text-stone-400">
         The seller will be in touch to arrange payment and collection.

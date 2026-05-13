@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CATEGORIES, MATERIALS_BY_CATEGORY, FINISHES_BY_CATEGORY, type Category } from '@/lib/constants'
 import { updateStockItem } from './actions'
+import { SubmitButton } from '@/components/submit-button'
 import type { StockItem } from '@/lib/types'
 
 const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
@@ -88,12 +89,12 @@ export function EditStockForm({ item, error }: { item: StockItem; error?: string
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
+        <SubmitButton
+          pendingText="Saving…"
+          className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800 disabled:opacity-60"
         >
           Save changes
-        </button>
+        </SubmitButton>
         <a
           href="/dashboard"
           className="rounded-lg border border-stone-300 px-6 py-2.5 font-semibold text-stone-700 transition-colors hover:bg-stone-50"

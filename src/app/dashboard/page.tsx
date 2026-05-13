@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions } from '@/lib/format'
-import { markAsSold, archiveItem, relistItem } from './actions'
+import { markAsSold, archiveItem, relistItem, unlistItem } from './actions'
 import { SHAPE_LABELS } from '@/components/shape-preview'
 import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import type { StockItem } from '@/lib/types'
@@ -37,7 +37,7 @@ type StockWithListing = StockItem & { listings: ListingRef | ListingRef[] | null
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; filter?: string }>
+  searchParams: Promise<{ message?: string; filter?: string; page?: string }>
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -52,12 +52,15 @@ export default async function DashboardPage({
   if (!profile?.workshop_id) redirect('/onboarding')
 
   const workshop = profile.workshops as unknown as WorkshopDetails | null
-  const { message, filter } = await searchParams
+  const { message, filter, page: pageParam } = await searchParams
   const activeFilter = filter ?? 'all'
+  const PAGE_SIZE = 30
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10))
+  const offset = (page - 1) * PAGE_SIZE
 
   let stockQuery = supabase
     .from('stock_items')
-    .select('*, listings(id, price_pence, quantity, status)')
+    .select('*, listings(id, price_pence, quantity, status)', { count: 'exact' })
     .eq('workshop_id', profile.workshop_id)
     .order('created_at', { ascending: false })
 
@@ -66,7 +69,16 @@ export default async function DashboardPage({
   if (activeFilter === 'sold')      stockQuery = stockQuery.eq('status', 'sold')
   if (activeFilter === 'archived')  stockQuery = stockQuery.eq('status', 'archived')
 
-  const { data: rawItems } = await stockQuery
+  const { data: rawItems, count: totalItems } = await stockQuery.range(offset, offset + PAGE_SIZE - 1)
+  const totalPages = Math.max(1, Math.ceil((totalItems ?? 0) / PAGE_SIZE))
+
+  const dashPageUrl = (p: number) => {
+    const sp = new URLSearchParams()
+    if (activeFilter !== 'all') sp.set('filter', activeFilter)
+    if (p > 1) sp.set('page', String(p))
+    const qs = sp.toString()
+    return `/dashboard${qs ? `?${qs}` : ''}`
+  }
 
   // Normalise the listings join — Supabase returns array for has-many
   const stockItems: StockWithListing[] = (rawItems ?? []).map(item => ({
@@ -287,6 +299,11 @@ export default async function DashboardPage({
                               <Link href={`/stock/${item.id}/reduce-qty`} className="text-xs text-stone-500 hover:text-stone-700">
                                 Sold some
                               </Link>
+                              <form action={unlistItem.bind(null, item.id, listing.id)}>
+                                <button type="submit" className="text-xs text-stone-500 hover:text-stone-700">
+                                  Unlist
+                                </button>
+                              </form>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
                                 <button type="submit" className="text-xs text-amber-700 hover:text-amber-900">
                                   Mark sold
@@ -315,6 +332,27 @@ export default async function DashboardPage({
             </table>
           </div>
         )}
+        {/* Dashboard pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-center gap-3">
+            {page > 1 ? (
+              <Link href={dashPageUrl(page - 1)} className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50">
+                ← Previous
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-300">← Previous</span>
+            )}
+            <span className="text-sm text-stone-500">Page {page} of {totalPages}</span>
+            {page < totalPages ? (
+              <Link href={dashPageUrl(page + 1)} className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50">
+                Next →
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-300">Next →</span>
+            )}
+          </div>
+        )}
+
         {/* Camera app upgrade banner */}
         {workshop?.verification_status === 'approved' && (
           <Link

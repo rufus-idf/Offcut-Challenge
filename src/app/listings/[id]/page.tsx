@@ -6,8 +6,9 @@ import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl } from '@/lib/format'
 import { SHAPE_LABELS } from '@/components/shape-preview'
 import { ShapePreviewModal } from '@/components/shape-preview-modal'
-import { uploadImage, deleteImage } from './actions'
+import { uploadImage, deleteImage, setImageAsCover } from './actions'
 import { QuantityEnquiry } from '@/components/quantity-enquiry'
+import { SubmitButton } from '@/components/submit-button'
 
 type StockShape = {
   shape_type: string
@@ -147,9 +148,14 @@ export default async function ListingPage({
                           sizes="25vw"
                         />
                         {isOwner && (
-                          <form action={deleteImage.bind(null, img.id, id)} className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
-                            <button type="submit" className="text-xs text-white font-medium">Remove</button>
-                          </form>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
+                            <form action={setImageAsCover.bind(null, img.id, id)}>
+                              <button type="submit" className="text-xs text-white font-semibold bg-white/20 rounded px-2 py-0.5 hover:bg-white/30">Set as cover</button>
+                            </form>
+                            <form action={deleteImage.bind(null, img.id, id)}>
+                              <button type="submit" className="text-xs text-white font-medium hover:underline">Remove</button>
+                            </form>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -196,12 +202,12 @@ export default async function ListingPage({
                     required
                     className="flex-1 text-sm text-stone-600 file:mr-3 file:rounded-lg file:border-0 file:bg-stone-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-stone-700 hover:file:bg-stone-200"
                   />
-                  <button
-                    type="submit"
-                    className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800"
+                  <SubmitButton
+                    pendingText="Uploading…"
+                    className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-60"
                   >
                     Upload
-                  </button>
+                  </SubmitButton>
                 </div>
                 <p className="mt-2 text-xs text-stone-400">JPEG, PNG or WebP · max 5MB each</p>
               </form>
@@ -215,6 +221,11 @@ export default async function ListingPage({
                 <div>
                   <h1 className="text-2xl font-bold text-stone-900">{typedListing.material}</h1>
                   <p className="text-stone-500">{typedListing.finish}</p>
+                  {isOwner && (
+                    <Link href={`/listings/${id}/edit`} className="mt-1 inline-block text-xs text-amber-700 hover:underline">
+                      Edit listing
+                    </Link>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-amber-700">{formatPrice(typedListing.price_pence)}</p>

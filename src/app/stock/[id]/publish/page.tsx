@@ -4,6 +4,7 @@ import { Header } from '@/components/header'
 import { formatDimensions } from '@/lib/format'
 import { FINISHES_BY_CATEGORY, type Category } from '@/lib/constants'
 import { publishToMarketplace } from './actions'
+import { SubmitButton } from '@/components/submit-button'
 
 const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
 
@@ -126,12 +127,12 @@ export default async function PublishPage({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800"
+            <SubmitButton
+              pendingText="Publishing…"
+              className="rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-amber-800 disabled:opacity-60"
             >
               Publish to listings
-            </button>
+            </SubmitButton>
             <a
               href="/dashboard"
               className="rounded-lg border border-stone-300 px-6 py-2.5 font-semibold text-stone-700 transition-colors hover:bg-stone-50"

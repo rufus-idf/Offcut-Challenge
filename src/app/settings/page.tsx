@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { getLogoUrl } from '@/lib/format'
 import { updateWebsiteUrl, uploadLogo, removeLogo } from './actions'
+import { SubmitButton } from '@/components/submit-button'
 
 const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
 
@@ -100,12 +101,12 @@ export default async function SettingsPage({
                 required
                 className="flex-1 text-sm text-stone-600 file:mr-3 file:rounded-lg file:border-0 file:bg-stone-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-stone-700 hover:file:bg-stone-200"
               />
-              <button
-                type="submit"
-                className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800"
+              <SubmitButton
+                pendingText="Uploading…"
+                className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-60"
               >
                 Upload
-              </button>
+              </SubmitButton>
             </div>
             <p className="text-xs text-stone-400">JPEG, PNG, WebP or SVG · max 2MB · square images work best</p>
           </form>
@@ -132,12 +133,12 @@ export default async function SettingsPage({
               </p>
             </div>
             <div>
-              <button
-                type="submit"
-                className="rounded-lg bg-amber-700 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-800"
+              <SubmitButton
+                pendingText="Saving…"
+                className="rounded-lg bg-amber-700 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-60"
               >
                 Save
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </div>

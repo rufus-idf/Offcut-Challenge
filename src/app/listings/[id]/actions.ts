@@ -99,6 +99,32 @@ export async function uploadImage(listingId: string, formData: FormData) {
   redirect(`/listings/${listingId}`)
 }
 
+export async function setImageAsCover(imageId: string, listingId: string, _formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+
+  const { data: images } = await supabase
+    .from('listing_images')
+    .select('id')
+    .eq('listing_id', listingId)
+    .order('position')
+
+  if (!images) return
+
+  // Reorder: chosen image goes to position 0, rest follow in existing order
+  const reordered = [
+    images.find(i => i.id === imageId)!,
+    ...images.filter(i => i.id !== imageId),
+  ]
+
+  for (let i = 0; i < reordered.length; i++) {
+    await supabase.from('listing_images').update({ position: i }).eq('id', reordered[i].id)
+  }
+
+  revalidatePath(`/listings/${listingId}`)
+}
+
 export async function deleteImage(imageId: string, listingId: string, _formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
