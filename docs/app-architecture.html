@@ -370,6 +370,7 @@
   <a class="nav-link" href="#schema">DB Schema</a>
   <a class="nav-link" href="#routes">Routes</a>
   <a class="nav-link" href="#roadmap">Roadmap</a>
+  <a class="nav-link" href="#mobile">Mobile App</a>
   <a class="nav-link" href="#cats">Categories</a>
 </nav>
 
@@ -1033,6 +1034,118 @@ erDiagram
           <div class="tl-week">Soft Launch</div>
           <div class="tl-title">Invite 5–10 real UK workshops</div>
           <ul class="tl-list"><li>Once Phase 3 complete and Phase 4 acceptable</li></ul>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">Phase 5 — Future</div>
+          <div class="tl-title">Native Mobile App (iOS &amp; Android)</div>
+          <ul class="tl-list">
+            <li>React Native (Expo) — single codebase for iOS + Android</li>
+            <li>Same Supabase backend, same auth, same RLS policies</li>
+            <li>Browse, stock management, publish to marketplace</li>
+            <li>Camera scanner — replaces Python desktop app entirely</li>
+            <li>Do not start until web is fully launched and Stripe is live</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MOBILE APP ══ -->
+  <section id="mobile">
+    <h2>📱 Phase 5 — Native Mobile App (Future Project)</h2>
+    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:1.2rem">
+      Do not start until the web app is fully launched and Stripe is live. Building mobile against a moving backend creates maintenance debt on two codebases simultaneously.
+    </p>
+
+    <div class="card-grid cols-3" style="margin-bottom:1.2rem">
+      <div class="card">
+        <h3>Platform</h3>
+        <p style="font-size:0.85rem;font-weight:700;color:var(--accent);margin-bottom:0.5rem">React Native (Expo)</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Single codebase — iOS <strong>and</strong> Android</li>
+          <li>TypeScript (same as web)</li>
+          <li>Expo Go for device testing without App Store review</li>
+          <li>Supabase first-class React Native SDK</li>
+          <li><strong>Not PWA</strong> — Apple PWA support too limited</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Accounts needed</h3>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li><strong>Apple Developer Program</strong><br>£79/year — required for App Store<br>Review: 1–4 weeks</li>
+          <li style="margin-top:0.5rem"><strong>Google Play Console</strong><br>£20 one-time — required for Android<br>Review: a few days</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Shared with web</h3>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Supabase project (same DB, auth, storage)</li>
+          <li>All workshops, stock, listings data</li>
+          <li>Stripe customer &amp; subscription records</li>
+          <li>API keys for camera integration</li>
+          <li>TypeScript types (shared or duplicated)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="diagram-wrapper" id="dw-mobile">
+      <button class="fs-btn" onclick="toggleFS('dw-mobile')">⛶ Full screen</button>
+      <div class="mermaid">
+flowchart TB
+    subgraph APP["React Native App — Expo"]
+        AUTH["Auth screen\nSupabase login"]
+        BROWSE["Browse listings\nWorkshop profiles, map"]
+        STOCK["My Stock dashboard\nManage inventory on the go"]
+        PUBLISH["Publish to marketplace\nSet price, confirm details"]
+        CAM["Camera scanner\nReplaces Python desktop app"]
+    end
+
+    subgraph CAMERA_FLOW["Camera Scanner Flow"]
+        PHONE["Phone camera\nCaptures offcut above CNC bed"]
+        DETECT["Shape detection\nExpo Camera + processing"]
+        MANUAL["Operator confirms\nmaterial, thickness, qty"]
+        PUSH["POST to api/ingest\nwith workshop API key"]
+    end
+
+    subgraph SHARED["Shared Backend — unchanged"]
+        SB["Supabase\nSame DB, auth, RLS"]
+        API["api/ingest endpoint\nalready built"]
+        WEB["Web app\nSame data, same workshops"]
+    end
+
+    AUTH --> BROWSE
+    AUTH --> STOCK
+    STOCK --> PUBLISH
+    AUTH --> CAM
+    CAM --> PHONE --> DETECT --> MANUAL --> PUSH
+    APP --> SB
+    PUSH --> API --> SB
+    WEB --> SB
+      </div>
+    </div>
+
+    <div style="margin-top:1.2rem" class="card">
+      <h3>Why the mobile app replaces the Python desktop camera app</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.8rem">
+        <div>
+          <p style="font-size:0.8rem;font-weight:700;color:var(--accent4);margin-bottom:0.4rem">Current: Python desktop EXE</p>
+          <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+            <li>Windows only</li>
+            <li>Requires a PC near the CNC bed</li>
+            <li>Manual install + setup</li>
+            <li>Separate product to maintain</li>
+            <li>No push notifications or remote access</li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:0.8rem;font-weight:700;color:var(--accent2);margin-bottom:0.4rem">Future: React Native mobile app</p>
+          <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+            <li>iOS and Android</li>
+            <li>Phone in hand above any surface</li>
+            <li>Download from App Store / Google Play</li>
+            <li>Same codebase as the rest of the mobile app</li>
+            <li>Push notifications when enquiries arrive</li>
+          </ul>
         </div>
       </div>
     </div>

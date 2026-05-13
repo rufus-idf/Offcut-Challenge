@@ -295,8 +295,9 @@ Only start this after Phase 2 is signed off.
 - Buy button + PaymentIntent (95/5 split via Connect)
 - Transaction records in DB
 
-### Phase 4 — Mobile
+### Phase 4 — Responsive web (mobile browser)
 Full mobile layout pass after desktop is stable and payments are live.
+This is NOT the native app — it just makes the web app usable on phones.
 - Responsive dashboard (currently table-based, breaks on small screens)
 - Mobile navigation (hamburger / bottom nav)
 - Touch-friendly interactions (larger tap targets, swipe gestures)
@@ -304,6 +305,60 @@ Full mobile layout pass after desktop is stable and payments are live.
 
 ### Soft launch
 Invite 5–10 real UK workshops once Phase 3 is complete and Phase 4 is acceptable.
+
+---
+
+## Phase 5 — Native mobile app (future project)
+
+**Do not start until:** web app is fully launched, Stripe is live, and the product is stable.
+Building mobile against a moving backend creates maintenance debt on two codebases simultaneously.
+
+### Platform decision: React Native (Expo)
+- Single codebase for iOS and Android
+- TypeScript — same language as the web app
+- Supabase has a first-class React Native SDK — connects to the same database, same auth, same RLS policies
+- Expo Go enables testing on real devices without App Store review
+- Can share types, constants, and some business logic between web and mobile repos
+- **Do NOT use PWA** — Apple's PWA support is too limited for a real product
+
+### Key accounts needed
+- Apple Developer Program: £79/year — required to submit to App Store (review takes 1–4 weeks)
+- Google Play Console: £20 one-time — required to publish on Android (review takes a few days)
+
+### What the native app should do
+The mobile app is not just a companion viewer — it should absorb the camera scanning feature,
+replacing the current Python desktop app entirely.
+
+**Core screens:**
+- Auth (Supabase, shared sessions with web)
+- Browse listings (same marketplace data)
+- Workshop profiles and map
+- My Stock dashboard (manage inventory on the go)
+- Publish to marketplace
+- **Camera scanner** — replaces the Python desktop EXE:
+  - Use Expo Camera + device camera
+  - Capture offcut above CNC bed or workbench
+  - Detect shape, measure dimensions (or manual entry on phone)
+  - POST to /api/ingest with API key → lands in stock as draft
+  - Much better UX than a Windows desktop app
+
+### Architecture
+```
+React Native (Expo) app
+        ↓
+Supabase JS SDK (same project as web)
+        ↓
+Same Postgres DB, same RLS policies, same auth
+        ↓
+/api/ingest endpoint (for camera push — already built)
+```
+
+### Shared between web and mobile
+- Supabase project (database, auth, storage)
+- All stock_items, listings, workshops data
+- API keys for camera integration
+- Stripe customer/subscription records
+- Types can be shared via a shared package or duplicated manually
 
 ---
 
