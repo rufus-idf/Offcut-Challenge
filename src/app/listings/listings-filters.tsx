@@ -4,6 +4,15 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useCallback, useTransition, useRef, useState, useEffect } from 'react'
 import { CATEGORIES, ALL_MATERIALS, ALL_FINISHES } from '@/lib/constants'
 
+const shimmerStyle = (color: string, dimColor: string): React.CSSProperties => ({
+  background: `linear-gradient(90deg, ${dimColor} 0%, ${color} 50%, ${dimColor} 100%)`,
+  backgroundSize: '300% auto',
+  WebkitBackgroundClip: 'text',
+  backgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  animation: 'text-shimmer 1.6s ease-in-out infinite',
+})
+
 type Filters = {
   q?: string
   category?: string
@@ -174,40 +183,15 @@ export function ListingsFilters({ filters }: { filters: Filters }) {
 
   return (
     <div className="mb-8">
-      {/* Loading overlay — logo shimmer */}
+      {/* Loading overlay — covers programmatic filter navigation (router.push) */}
       {isPending && (
         <div
           className="fixed inset-x-0 bottom-0 top-16 z-50 flex items-center justify-center backdrop-blur-sm"
           style={{ background: 'rgba(28,28,30,0.70)' }}
         >
-          <p
-            className="select-none text-4xl font-black tracking-tight"
-            style={{ letterSpacing: '-0.03em' }}
-          >
-            <span
-              style={{
-                background: 'linear-gradient(90deg, rgba(255,255,255,0.25) 0%, #ffffff 50%, rgba(255,255,255,0.25) 100%)',
-                backgroundSize: '300% auto',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'text-shimmer 1.6s ease-in-out infinite',
-              }}
-            >
-              Offcut
-            </span>
-            <span
-              style={{
-                background: 'linear-gradient(90deg, rgba(61,190,114,0.25) 0%, #3DBE72 50%, rgba(61,190,114,0.25) 100%)',
-                backgroundSize: '300% auto',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'text-shimmer 1.6s ease-in-out infinite',
-              }}
-            >
-              Challenge
-            </span>
+          <p className="select-none text-4xl font-black" style={{ letterSpacing: '-0.03em' }}>
+            <span style={shimmerStyle('#ffffff', 'rgba(255,255,255,0.25)')}>Offcut</span>
+            <span style={shimmerStyle('#3DBE72', 'rgba(61,190,114,0.25)')}>Challenge</span>
           </p>
         </div>
       )}
