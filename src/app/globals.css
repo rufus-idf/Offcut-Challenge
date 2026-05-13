@@ -25,7 +25,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-@keyframes loading-sweep {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
+@keyframes text-shimmer {
+  0%   { background-position: -300% center; }
+  100% { background-position: 300% center; }
 }

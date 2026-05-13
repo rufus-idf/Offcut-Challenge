@@ -174,13 +174,41 @@ export function ListingsFilters({ filters }: { filters: Filters }) {
 
   return (
     <div className="mb-8">
-      {/* Loading bar */}
+      {/* Loading overlay — logo shimmer */}
       {isPending && (
-        <div className="fixed inset-x-0 top-16 z-50 h-0.5 overflow-hidden bg-stone-100">
-          <div
-            className="h-full w-1/4 rounded-full bg-[#3DBE72]"
-            style={{ animation: 'loading-sweep 1s ease-in-out infinite' }}
-          />
+        <div
+          className="fixed inset-x-0 bottom-0 top-16 z-50 flex items-center justify-center backdrop-blur-sm"
+          style={{ background: 'rgba(28,28,30,0.70)' }}
+        >
+          <p
+            className="select-none text-4xl font-black tracking-tight"
+            style={{ letterSpacing: '-0.03em' }}
+          >
+            <span
+              style={{
+                background: 'linear-gradient(90deg, rgba(255,255,255,0.25) 0%, #ffffff 50%, rgba(255,255,255,0.25) 100%)',
+                backgroundSize: '300% auto',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'text-shimmer 1.6s ease-in-out infinite',
+              }}
+            >
+              Offcut
+            </span>
+            <span
+              style={{
+                background: 'linear-gradient(90deg, rgba(61,190,114,0.25) 0%, #3DBE72 50%, rgba(61,190,114,0.25) 100%)',
+                backgroundSize: '300% auto',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'text-shimmer 1.6s ease-in-out infinite',
+              }}
+            >
+              Challenge
+            </span>
+          </p>
         </div>
       )}
 
