@@ -24,6 +24,7 @@ export default async function BrowsePage({
     sort?: string
     town?: string
     postcode?: string
+    hide_own?: string
     page?: string
   }>
 }) {
@@ -80,6 +81,9 @@ export default async function BrowsePage({
       ? query.in('workshop_id', workshopIdsForTown)
       : query.in('workshop_id', ['00000000-0000-0000-0000-000000000000'])
   }
+  if (filters.hide_own === '1' && profile.workshop_id) {
+    query = query.neq('workshop_id', profile.workshop_id)
+  }
 
   // Sort — distance overrides when a valid postcode is given
   if (filters.sort === 'price_asc')  query = query.order('price_pence', { ascending: true })
@@ -113,7 +117,7 @@ export default async function BrowsePage({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   const workshopName = (profile.workshops as unknown as { name: string } | null)?.name
-  const hasFilters = !!(filters.q || filters.category || filters.material || filters.finish || filters.max_price || filters.town || filters.postcode || filters.sort)
+  const hasFilters = !!(filters.q || filters.category || filters.material || filters.finish || filters.max_price || filters.town || filters.postcode || filters.sort || filters.hide_own)
 
   // Towns for the location filter — fetch separately so the dropdown isn't page-limited
   const { data: townRows } = await supabase
@@ -134,6 +138,7 @@ export default async function BrowsePage({
     if (filters.sort)      sp.set('sort', filters.sort)
     if (filters.town)      sp.set('town', filters.town)
     if (filters.postcode)  sp.set('postcode', filters.postcode)
+    if (filters.hide_own)  sp.set('hide_own', filters.hide_own)
     if (p > 1)             sp.set('page', String(p))
     const qs = sp.toString()
     return `/listings${qs ? `?${qs}` : ''}`
@@ -229,6 +234,17 @@ export default async function BrowsePage({
               className={`${selectClass} w-32`}
             />
           </div>
+
+          <label className="flex cursor-pointer items-center gap-2 self-end pb-2">
+            <input
+              type="checkbox"
+              name="hide_own"
+              value="1"
+              defaultChecked={filters.hide_own === '1'}
+              className="h-4 w-4 rounded border-stone-300 accent-amber-700"
+            />
+            <span className="whitespace-nowrap text-sm text-stone-600">Hide my listings</span>
+          </label>
 
           <button type="submit" className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700">
             Filter
