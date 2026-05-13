@@ -28,5 +28,5 @@ export async function generateApiKey(_formData: FormData) {
       { onConflict: 'workshop_id' }
     )
 
-  revalidatePath('/dashboard')
+  revalidatePath('/camera')
 }
