@@ -216,6 +216,7 @@ export default async function DashboardPage({
                   <th className="px-5 py-3">Qty</th>
                   <th className="px-5 py-3">Price</th>
                   <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Marketplace</th>
                   <th className="px-5 py-3">Actions</th>
                 </tr>
               </thead>
@@ -279,13 +280,27 @@ export default async function DashboardPage({
                           {STATUS_LABELS[item.status]}
                         </span>
                       </td>
+                      {/* Publish column — prominent for available items */}
+                      <td className="px-4 py-3">
+                        {item.status === 'available' ? (
+                          <Link
+                            href={`/stock/${item.id}/publish`}
+                            className="inline-flex items-center gap-2 rounded-full bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2A9E5A]"
+                            style={{ boxShadow: '0 2px 10px rgba(61,190,114,0.30)' }}
+                          >
+                            Publish to marketplace
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-stone-300">—</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-1.5">
                           {item.status === 'available' && (
                             <>
-                              <Link href={`/stock/${item.id}/publish`} className={pillGreen}>
-                                Publish
-                              </Link>
                               <Link href={`/stock/${item.id}/edit`} className={pillNeutral}>
                                 Edit
                               </Link>
