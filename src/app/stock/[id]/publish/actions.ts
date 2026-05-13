@@ -52,6 +52,23 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
     redirect(`/stock/${stockItemId}/publish?error=${encodeURIComponent(error.message)}`)
   }
 
+  // Copy any stock photos to the new listing so they appear immediately
+  const { data: stockImages } = await supabase
+    .from('stock_images')
+    .select('storage_path, position')
+    .eq('stock_item_id', stockItemId)
+    .order('position')
+
+  if (stockImages && stockImages.length > 0) {
+    await supabase.from('listing_images').insert(
+      stockImages.map(img => ({
+        listing_id:   listing.id,
+        storage_path: img.storage_path,
+        position:     img.position,
+      }))
+    )
+  }
+
   // Mark stock item as listed and save the finish back to it
   await supabase
     .from('stock_items')
