@@ -453,3 +453,19 @@ The following features have been identified for development after the core platf
 - Bot commands: `!search [material] [thickness]` returns matching live listings inline in Discord
 - Platform release notes pushed to Discord automatically
 - Tech: Discord.js bot, Supabase database webhooks or pg_notify triggering bot events, Discord REST API for message posting
+
+### Order tracking
+- Full lifecycle tracking for every transaction: Enquiry → Payment confirmed → Dispatched → Delivered → Received
+- Sellers mark orders as dispatched with an optional tracking number (Royal Mail, DPD, Parcelforce, etc.)
+- Buyers receive in-app notification and email when an order is dispatched; can mark as received once arrived
+- Dispute window: buyer has a set number of days after marking received to raise an issue before funds release
+- Full order history visible from the dashboard for both buyer and seller; admin can view all orders
+- Tech: `orders` table (listing_id, buyer_workshop_id, seller_workshop_id, status, tracking_number, tracking_carrier, dispatched_at, received_at, amount_pence), Resend for status-change notifications
+
+### Workshop account summary (analytics dashboard)
+- Private analytics view for each workshop showing their full lifetime performance on the platform
+- Key metrics: total revenue earned, total items listed, total items sold, total items purchased, total amount spent, current active listings, average review rating, member since date
+- Activity charts: monthly revenue trend, listing activity over time, category breakdown of stock and sales
+- Period comparison: current month vs. previous month, current quarter vs. previous quarter
+- Accessible only to the workshop owner — not visible on the public workshop profile
+- Tech: computed on-demand from existing tables (stock_items, listings, orders, reviews) using aggregation queries — no separate analytics table needed initially; consider Postgres materialised views or a dedicated analytics service if query load becomes a problem at scale

@@ -1057,6 +1057,8 @@ erDiagram
             <li>AI photo verification for uploaded listing images</li>
             <li>AI chatbot for natural-language material search</li>
             <li>Discord community bot — new listing alerts &amp; stock notifications</li>
+            <li>Order tracking — dispatch, delivery confirmation, dispute window</li>
+            <li>Workshop account summary — analytics, revenue trends, buying/selling breakdown</li>
           </ul>
         </div>
       </div>
@@ -1275,6 +1277,43 @@ flowchart TB
         </ul>
         <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
           Tech: Discord.js bot · Supabase webhooks / pg_notify · Discord REST API
+        </div>
+      </div>
+
+      <!-- Order tracking -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">🚚</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">Order Tracking</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Full lifecycle tracking for every transaction from enquiry to delivery. Sellers dispatch with a tracking number; buyers confirm receipt to release funds.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Statuses: Enquiry → Payment → Dispatched → Delivered → Received</li>
+          <li>Optional carrier + tracking number (Royal Mail, DPD, Parcelforce, etc.)</li>
+          <li>Buyer marks as received; dispute window before funds release</li>
+          <li>Full order history on dashboard for buyer and seller</li>
+          <li>Admin view of all orders for compliance and dispute resolution</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: orders table (listing_id, status, tracking_number, dispatched_at, received_at) · Resend notifications
+        </div>
+      </div>
+
+      <!-- Account summary -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">📊</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">Workshop Account Summary</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Private analytics dashboard for each workshop — lifetime performance, revenue trends, and buying/selling breakdown. Owner-only, not visible on the public profile.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Key metrics: revenue earned, items listed/sold, amount spent purchasing, active listings, avg. review rating</li>
+          <li>Charts: monthly revenue trend, listing activity, category breakdown</li>
+          <li>Period comparison: current vs. previous month/quarter</li>
+          <li>Computed on-demand — no separate analytics table needed at launch</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: aggregation queries on existing tables · consider Postgres materialised views at scale
         </div>
       </div>
 
