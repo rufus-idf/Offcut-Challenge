@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { formatPrice, formatDimensions, getImageUrl, formatDistance } from '@/lib/format'
-import { CATEGORIES, ALL_MATERIALS, ALL_FINISHES } from '@/lib/constants'
+import { ListingsFilters } from './listings-filters'
 import { SHAPE_LABELS } from '@/components/shape-preview'
 import { ShapePreviewModal } from '@/components/shape-preview-modal'
 import { geocodePostcode, haversineKm } from '@/lib/geocode'
@@ -153,8 +153,6 @@ export default async function BrowsePage({
     return `/listings${qs ? `?${qs}` : ''}`
   }
 
-  const selectClass = 'rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
-
   return (
     <div className="min-h-screen bg-[#FAF9F7]">
       <Header email={user.email!} workshopName={workshopName} />
@@ -170,101 +168,7 @@ export default async function BrowsePage({
           </Link>
         </div>
 
-        {/* Filters */}
-        <form method="get" className="mb-8 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4">
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Search</label>
-            <input
-              type="text" name="q"
-              defaultValue={filters.q ?? ''} placeholder="e.g. 18mm MDF, oak…"
-              className={`${selectClass} w-48`}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Sort by</label>
-            <select name="sort" defaultValue={filters.sort ?? ''} className={selectClass}>
-              <option value="">Newest first</option>
-              <option value="price_asc">Price: low to high</option>
-              <option value="price_desc">Price: high to low</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Category</label>
-            <select name="category" defaultValue={filters.category ?? ''} className={selectClass}>
-              <option value="">All categories</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Material</label>
-            <select name="material" defaultValue={filters.material ?? ''} className={selectClass}>
-              <option value="">All materials</option>
-              {ALL_MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Finish</label>
-            <select name="finish" defaultValue={filters.finish ?? ''} className={selectClass}>
-              <option value="">All finishes</option>
-              {ALL_FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Max price (£)</label>
-            <input
-              type="number" name="max_price" min="0" step="0.01"
-              defaultValue={filters.max_price ?? ''} placeholder="Any"
-              className={`${selectClass} w-28`}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">Location</label>
-            <select name="town" defaultValue={filters.town ?? ''} className={selectClass}>
-              <option value="">All locations</option>
-              {towns.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-stone-500">
-              Your postcode
-              <span className="ml-1 font-normal text-stone-400">(sorts nearest first)</span>
-            </label>
-            <input
-              type="text" name="postcode"
-              defaultValue={filters.postcode ?? ''} placeholder="e.g. BS1 4DJ"
-              className={`${selectClass} w-32`}
-            />
-          </div>
-
-          <label className="flex cursor-pointer items-center gap-2 self-end pb-2">
-            <input
-              type="checkbox"
-              name="hide_own"
-              value="1"
-              defaultChecked={filters.hide_own === '1'}
-              className="h-4 w-4 rounded border-stone-300 accent-[#3DBE72]"
-            />
-            <span className="whitespace-nowrap text-sm text-stone-600">Hide my listings</span>
-          </label>
-
-          <button type="submit" className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700">
-            Filter
-          </button>
-
-          {hasFilters && (
-            <Link href="/listings" className="text-sm text-stone-500 hover:text-stone-700">
-              Clear filters
-            </Link>
-          )}
-        </form>
+        <ListingsFilters towns={towns} filters={filters} />
 
         {postcodeInvalid && (
           <p className="mb-4 rounded-lg bg-[#E8F7EE] px-4 py-3 text-sm text-[#2A9E5A]">
