@@ -252,17 +252,28 @@ export default async function DashboardPage({
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           {item.status === 'available' && (
-                            <Link
-                              href={`/stock/${item.id}/publish`}
-                              className="text-xs font-medium text-amber-700 hover:text-amber-900"
-                            >
-                              Publish to listings
-                            </Link>
+                            <>
+                              <Link
+                                href={`/stock/${item.id}/publish`}
+                                className="text-xs font-medium text-amber-700 hover:text-amber-900"
+                              >
+                                Publish
+                              </Link>
+                              <Link
+                                href={`/stock/${item.id}/edit`}
+                                className="text-xs text-stone-500 hover:text-stone-700"
+                              >
+                                Edit
+                              </Link>
+                            </>
                           )}
                           {listing && item.status === 'listed' && (
                             <>
                               <Link href={`/listings/${listing.id}`} className="text-xs text-stone-500 hover:text-stone-700">
-                                View listing
+                                View
+                              </Link>
+                              <Link href={`/listings/${listing.id}/edit`} className="text-xs text-stone-500 hover:text-stone-700">
+                                Edit
                               </Link>
                               <form action={markAsSold.bind(null, item.id, listing.id)}>
                                 <button type="submit" className="text-xs text-amber-700 hover:text-amber-900">

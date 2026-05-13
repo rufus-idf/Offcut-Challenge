@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offcut Challenge — App Architecture & Flows</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface2: #f1f5f9;
+      --border: #e2e8f0;
+      --accent: #4f46e5;
+      --accent2: #16a34a;
+      --accent3: #d97706;
+      --accent4: #dc2626;
+      --accent5: #0284c7;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --stripe-color: #635bff;
+      --supabase-color: #059669;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Sticky top nav ── */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+
+    .nav-brand {
+      font-weight: 800;
+      color: var(--accent);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      padding: 0.85rem 1.2rem 0.85rem 0;
+      border-right: 1px solid var(--border);
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      padding: 0.85rem 0.7rem;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Page layout ── */
+    .page { max-width: 1380px; margin: 0 auto; padding: 2rem 2rem 3rem; }
+
+    header {
+      text-align: center;
+      padding: 2.5rem 0 2rem;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--text-muted); margin-top: 0.4rem; }
+    .badge-row { display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.18rem 0.7rem;
+      font-size: 0.73rem;
+      color: var(--text-muted);
+    }
+    .badge.stripe { background: #eef2ff; border-color: #a5b4fc; color: var(--stripe-color); }
+    .badge.supabase { background: #ecfdf5; border-color: #6ee7b7; color: var(--supabase-color); }
+    .badge.accent { background: #eef2ff; border-color: #a5b4fc; color: var(--accent); }
+
+    section {
+      margin-bottom: 3.5rem;
+      scroll-margin-top: 52px;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h3 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-grid { display: grid; gap: 1rem; }
+    .card-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    /* ── Diagram wrapper with full-screen ── */
+    .diagram-wrapper {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2.5rem 1.5rem 1.5rem;
+      overflow-x: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .diagram-wrapper:fullscreen {
+      background: white;
+      padding: 2.5rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* keep the button visible and in-place */
+    .diagram-wrapper:fullscreen .fs-btn {
+      position: fixed;
+      top: 0.6rem;
+      right: 0.6rem;
+    }
+
+    /* labelling row, if present */
+    .diagram-wrapper:fullscreen > div[style*="font-size"] {
+      flex-shrink: 0;
+    }
+
+    .diagram-wrapper:fullscreen .mermaid {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+
+    /* SVG fills container — JS removes the hardcoded pixel dimensions */
+    .diagram-wrapper:fullscreen .mermaid svg {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      display: block;
+    }
+
+    .fs-btn {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.28rem 0.65rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s, color 0.15s;
+      z-index: 10;
+      font-family: inherit;
+    }
+    .fs-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .mermaid { display: flex; justify-content: center; }
+    .mermaid svg { max-width: 100%; }
+
+    /* ── Tech Stack ── */
+    .stack-layer {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stack-layer:last-child { border-bottom: none; }
+    .stack-label {
+      width: 95px;
+      min-width: 95px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 600;
+      text-align: right;
+      padding-right: 0.7rem;
+      padding-top: 0.4rem;
+    }
+    .stack-items { display: flex; gap: 0.45rem; flex-wrap: wrap; flex: 1; }
+    .tech-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-next { background: #000; }
+    .dot-ts { background: #3178c6; }
+    .dot-tw { background: #38bdf8; }
+    .dot-sb { background: #3ecf8e; }
+    .dot-str { background: #635bff; }
+    .dot-ve { background: #000; }
+    .dot-re { background: #f59e0b; }
+    .dot-lf { background: #22c55e; }
+    .dot-cam { background: #ef4444; }
+    .dot-ch { background: #f59e0b; }
+    .dot-pc { background: #a78bfa; }
+
+    /* ── Business model cards ── */
+    .biz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .biz-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .biz-amount {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+      line-height: 1.1;
+    }
+    .biz-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .biz-desc { color: var(--text-muted); font-size: 0.84rem; margin-top: 0.8rem; line-height: 1.5; }
+
+    /* ── DB Schema ── */
+    .db-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.2rem; }
+    .db-table { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .db-head { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0.55rem 1rem; font-weight: 700; font-size: 0.87rem; }
+    .db-col { display: flex; align-items: baseline; justify-content: space-between; padding: 0.26rem 1rem; font-size: 0.78rem; border-bottom: 1px solid #f1f5f9; }
+    .db-col:last-child { border-bottom: none; }
+    .col-name { font-family: 'Consolas', 'Courier New', monospace; color: var(--text); }
+    .col-type { color: var(--text-muted); font-size: 0.72rem; }
+    .col-note { font-size: 0.67rem; color: var(--accent5); margin-left: 0.4rem; }
+    .pk { color: #b45309 !important; }
+    .fk { color: var(--accent5) !important; }
+    .db-note { color: var(--text-muted); font-size: 0.73rem; padding: 0.45rem 1rem; font-style: italic; }
+
+    /* ── Route map ── */
+    .route-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+    .route-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .route-path { font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8rem; color: var(--accent5); min-width: 185px; }
+    .route-desc { font-size: 0.82rem; color: var(--text-muted); flex: 1; }
+    .route-status { font-size: 0.67rem; padding: 0.14rem 0.5rem; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+    .s-live { background: #dcfce7; color: #15803d; }
+    .s-part { background: #eef2ff; color: #4338ca; }
+    .s-plan { background: #fff7ed; color: #c2410c; }
+
+    /* ── Timeline ── */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
+    .tl-item { position: relative; margin-bottom: 1.4rem; }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -1.6rem; top: 0.35rem;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: var(--bg);
+    }
+    .tl-item.done::before { background: var(--accent2); border-color: var(--accent2); }
+    .tl-item.now::before { background: var(--accent3); border-color: var(--accent3); box-shadow: 0 0 0 3px rgba(217,119,6,0.18); }
+    .tl-week { font-size: 0.73rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .tl-title { font-weight: 600; font-size: 0.93rem; margin: 0.15rem 0; }
+    .tl-list { font-size: 0.82rem; color: var(--text-muted); }
+    .tl-list li { margin-left: 1.2rem; list-style: disc; }
+
+    /* ── Categories ── */
+    .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .cat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .cat-title { font-weight: 700; font-size: 0.88rem; color: var(--accent); margin-bottom: 0.7rem; }
+    .cat-row { margin-bottom: 0.5rem; font-size: 0.78rem; }
+    .cat-row strong { display: block; color: var(--text); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
+    .cat-row span { color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .biz-grid { grid-template-columns: 1fr; }
+      .db-grid { grid-template-columns: repeat(2, 1fr); }
+      .cat-grid { grid-template-columns: repeat(2, 1fr); }
+      .route-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .db-grid { grid-template-columns: 1fr; }
+      .cat-grid { grid-template-columns: 1fr; }
+      .route-path { min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ STICKY TOP NAV ══ -->
+<nav class="top-nav">
+  <div class="nav-brand">Offcut Challenge</div>
+  <a class="nav-link" href="#biz">Business Model</a>
+  <a class="nav-link" href="#mktsite">Marketplace Site</a>
+  <a class="nav-link" href="#purchase">Purchase Flow</a>
+  <a class="nav-link" href="#stack">Tech Stack</a>
+  <a class="nav-link" href="#onboarding">Onboarding</a>
+  <a class="nav-link" href="#stock">Stock → Market</a>
+  <a class="nav-link" href="#stripe-sub">Stripe Subscriptions</a>
+  <a class="nav-link" href="#stripe-connect">Stripe Connect</a>
+  <a class="nav-link" href="#stripe-full">Stripe Overview</a>
+  <a class="nav-link" href="#camera">Camera App</a>
+  <a class="nav-link" href="#schema">DB Schema</a>
+  <a class="nav-link" href="#routes">Routes</a>
+  <a class="nav-link" href="#roadmap">Roadmap</a>
+  <a class="nav-link" href="#cats">Categories</a>
+</nav>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <h1><span>Offcut</span> Challenge</h1>
+    <p>B2B material offcuts marketplace for UK workshops — Architecture &amp; Flow Reference</p>
+    <div class="badge-row">
+      <span class="badge">Next.js 15</span>
+      <span class="badge">TypeScript</span>
+      <span class="badge supabase">Supabase</span>
+      <span class="badge stripe">Stripe</span>
+      <span class="badge">Vercel</span>
+      <span class="badge accent">Soft launch: 5–10 workshops</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. BUSINESS MODEL ══ -->
+  <section id="biz">
+    <h2>💰 Business Model</h2>
+    <div class="biz-grid">
+      <div class="biz-card">
+        <span class="biz-amount">£29<small style="font-size:1rem">/mo</small></span>
+        <div class="biz-label">Flat Subscription</div>
+        <div class="biz-desc">Marketplace access + private stock tracking. Purchased on the <strong>external marketplace website</strong>. Stripe Checkout → webhook → invite email → app access. Verified UK businesses only.</div>
+      </div>
+      <div class="biz-card">
+        <span class="biz-amount">5%</span>
+        <div class="biz-label">Transaction Fee</div>
+        <div class="biz-desc">Taken automatically on each sale between workshops via Stripe Connect — handled inside the app. 95% goes to the seller, 5% to the platform.</div>
+      </div>
+      <div class="biz-card">
+        <span class="biz-amount" style="color:var(--accent3)">+</span>
+        <div class="biz-label">Camera App (Add-on)</div>
+        <div class="biz-desc">Separate purchasable product on the marketplace website — Python desktop app (Windows EXE). Billed separately via Stripe. Requires £29/mo subscription to push stock into Supabase.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MARKETPLACE WEBSITE ══ -->
+  <section id="mktsite">
+    <h2>🌐 Marketplace Website — Product Storefront (Separate Site)</h2>
+    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.2rem">
+      A separate public-facing website that describes and sells all products — including the Offcut Challenge app and the Camera App.
+      Customers purchase here first, <em>before</em> they ever touch the Offcut Challenge app itself.
+    </p>
+    <div class="card-grid cols-3" style="margin-bottom:1.2rem">
+      <div class="card">
+        <h3>What it shows</h3>
+        <ul style="font-size:0.85rem;color:var(--text-muted);margin-left:1.2rem;list-style:disc;line-height:1.8">
+          <li>Product descriptions &amp; pricing</li>
+          <li>Offcut Challenge — £29/month subscription</li>
+          <li>Camera App — separate purchase</li>
+          <li>Other products (future)</li>
+          <li>FAQs, case studies, contact</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What happens on purchase</h3>
+        <ul style="font-size:0.85rem;color:var(--text-muted);margin-left:1.2rem;list-style:disc;line-height:1.8">
+          <li>Stripe Checkout on marketplace site</li>
+          <li>Webhook fires on successful payment</li>
+          <li>Buyer receives email with access link</li>
+          <li>Link takes them to Offcut Challenge signup</li>
+          <li>Subscription status pre-confirmed in DB</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Relationship to the app</h3>
+        <ul style="font-size:0.85rem;color:var(--text-muted);margin-left:1.2rem;list-style:disc;line-height:1.8">
+          <li>Separate domain / codebase</li>
+          <li>Shares the same Stripe account</li>
+          <li>Webhook writes into Offcut Challenge Supabase DB</li>
+          <li>No login required to browse or buy</li>
+          <li>App login is separate from marketplace site</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PURCHASE FLOW ══ -->
+  <section id="purchase">
+    <h2>🛒 Customer Purchase Journey — Marketplace Site to App Access</h2>
+    <div class="diagram-wrapper" id="dw-purchase">
+      <button class="fs-btn" onclick="toggleFS('dw-purchase')">⛶ Full screen</button>
+      <div class="mermaid">
+flowchart TD
+    subgraph MW["External Marketplace Website"]
+        V["Visitor browses product descriptions"]
+        PG["Selects Offcut Challenge\n29 per month"]
+        SC["Stripe Checkout\non marketplace site"]
+        CA["Also available:\nCamera App purchase\nor bundle deal"]
+    end
+
+    subgraph ST["Stripe"]
+        PAY["Payment processed"]
+        WH["Webhook fires\ncheckout.session.completed"]
+    end
+
+    subgraph OC["Offcut Challenge App — offcut-challenge.vercel.app"]
+        WHH["Webhook handler\nReceives event"]
+        DB1["Create or update workshop record\nsubscription_status = active\nstripe_customer_id saved"]
+        EMAIL["Resend email to buyer\nwith invite link and instructions"]
+        SU["Buyer clicks link\nCreates account on app\nor logs in if existing"]
+        ONB["Onboarding\nCreate workshop name and slug"]
+        VER["Verification form\nCH number, VAT, postcode"]
+        ADM["Admin approves"]
+        FULL["Full dashboard access\nBrowse and sell on marketplace"]
+    end
+
+    V --> PG --> SC
+    CA --> SC
+    SC --> PAY --> WH --> WHH
+    WHH --> DB1
+    WHH --> EMAIL
+    EMAIL --> SU --> ONB --> VER --> ADM --> FULL
+      </div>
+    </div>
+
+    <div style="margin-top:1.2rem" class="diagram-wrapper" id="dw-purchase2">
+      <button class="fs-btn" onclick="toggleFS('dw-purchase2')">⛶ Full screen</button>
+      <div style="font-size:0.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem">Camera App — Purchase to First Use</div>
+      <div class="mermaid">
+flowchart LR
+    subgraph MW2["Marketplace Website"]
+        BUY["Buy Camera App\nor bundle with Offcut sub"]
+        STRIPE2["Stripe Checkout"]
+    end
+
+    subgraph DL["After Payment"]
+        DLEMAIL["Email with:\nDownload link for Windows EXE\nSetup instructions\nAPI key setup guide"]
+        DLAPP["Download and install\nPySide6 desktop app"]
+    end
+
+    subgraph SETUP["Camera App Setup"]
+        APIKEY["User goes to Offcut Challenge dashboard\nCopies their unique API key"]
+        PASTE["Pastes API key into camera app\none-time setup"]
+        SCAN["Camera app now pushes scans\ndirectly to their Supabase stock"]
+    end
+
+    BUY --> STRIPE2 --> DLEMAIL --> DLAPP --> APIKEY --> PASTE --> SCAN
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 2. TECH STACK ══ -->
+  <section id="stack">
+    <h2>🧱 Tech Stack</h2>
+    <div class="card">
+      <div class="stack-layer">
+        <div class="stack-label">Frontend</div>
+        <div class="stack-items">
+          <div class="tech-pill"><span class="dot dot-next"></span>Next.js 15 App Router</div>
+          <div class="tech-pill"><span class="dot dot-ts"></span>TypeScript (strict)</div>
+          <div class="tech-pill"><span class="dot dot-tw"></span>Tailwind v4</div>
+          <div class="tech-pill"><span class="dot dot-lf"></span>Leaflet + OpenStreetMap</div>
+        </div>
+      </div>
+      <div class="stack-layer">
+        <div class="stack-label">Backend</div>
+        <div class="stack-items">
+          <div class="tech-pill"><span class="dot dot-sb"></span>Supabase Postgres</div>
+          <div class="tech-pill"><span class="dot dot-sb"></span>Supabase Auth</div>
+          <div class="tech-pill"><span class="dot dot-sb"></span>Supabase Storage</div>
+          <div class="tech-pill">Server Actions</div>
+        </div>
+      </div>
+      <div class="stack-layer">
+        <div class="stack-label">Payments</div>
+        <div class="stack-items">
+          <div class="tech-pill"><span class="dot dot-str"></span>Stripe Subscriptions</div>
+          <div class="tech-pill"><span class="dot dot-str"></span>Stripe Connect</div>
+          <div class="tech-pill"><span class="dot dot-str"></span>Stripe Webhooks</div>
+        </div>
+      </div>
+      <div class="stack-layer">
+        <div class="stack-label">Integrations</div>
+        <div class="stack-items">
+          <div class="tech-pill"><span class="dot dot-re"></span>Resend (email)</div>
+          <div class="tech-pill"><span class="dot dot-ch"></span>Companies House API</div>
+          <div class="tech-pill"><span class="dot dot-pc"></span>Postcodes.io (geocoding)</div>
+          <div class="tech-pill"><span class="dot dot-cam"></span>Camera App (planned)</div>
+        </div>
+      </div>
+      <div class="stack-layer">
+        <div class="stack-label">Hosting</div>
+        <div class="stack-items">
+          <div class="tech-pill"><span class="dot dot-ve"></span>Vercel (frontend)</div>
+          <div class="tech-pill"><span class="dot dot-sb"></span>Supabase (database)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 3. ONBOARDING FLOW ══ -->
+  <section id="onboarding">
+    <h2>🚀 User Onboarding &amp; Verification Flow</h2>
+    <div class="diagram-wrapper" id="dw1">
+      <button class="fs-btn" onclick="toggleFS('dw1')">⛶ Full screen</button>
+      <div class="mermaid">
+flowchart TD
+    A([User visits site]) --> B[Signup page]
+    B --> C{Email confirmed?}
+    C -- No --> D[Check inbox]
+    D --> C
+    C -- Yes --> E[Onboarding\nCreate workshop name and slug]
+    E --> F[Verification form\nCH number, VAT, postcode]
+    F --> G[Postcodes.io\npostcode to lat and lng]
+    G --> H[Companies House API\nVerify company name]
+    H --> I[Resend email\nAlert admin]
+    I --> J{Admin reviews\nat admin panel}
+    J -- Approved --> K[verification_status = approved\nverified_at set\nWorkshop added to map]
+    J -- Rejected --> L[verification_status = rejected\nrejection_reason saved]
+    L --> M[User re-submits]
+    M --> F
+    K --> N[Dashboard\nFull access granted]
+    N --> O[Browse marketplace]
+    N --> P[Add stock items]
+    N --> Q[View workshop map]
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 4. STOCK → MARKETPLACE FLOW ══ -->
+  <section id="stock">
+    <h2>📦 Stock to Marketplace Flow</h2>
+    <div class="diagram-wrapper" id="dw2">
+      <button class="fs-btn" onclick="toggleFS('dw2')">⛶ Full screen</button>
+      <div class="mermaid">
+flowchart LR
+    subgraph M["Manual Entry — live now"]
+        M1["Workshop fills in\nlistings/new form\nMaterial, dimensions, price, qty"]
+        M2["Server Action creates BOTH\nstock_item and listing at once"]
+        M3["stock_item.status = listed\nlisting.status = active"]
+    end
+
+    subgraph C["Camera App — planned"]
+        C1["Camera detects offcut shape\nRECT, L, C, or POLY"]
+        C2["Operator enters\nmaterial, thickness, qty, notes"]
+        C3["POST JSON bundle to\nNext.js API route\nwith API key in header"]
+        C4["stock_item created\nstatus = available\nsource = camera"]
+        C5["Workshop reviews draft\nin dashboard"]
+        C6["Click Publish\nand enter price"]
+        C7["listing created\nstock_item.status = listed"]
+    end
+
+    subgraph PUB["Public Marketplace"]
+        P1["Listing visible on Browse page\nto all verified workshops"]
+    end
+
+    subgraph SOLD["When Sold"]
+        S1["Buyer purchases"]
+        S2["stock_item.status = sold\nlisting.status = sold"]
+    end
+
+    M1 --> M2 --> M3 --> P1
+    C1 --> C2 --> C3 --> C4 --> C5 --> C6 --> C7 --> P1
+    P1 --> S1 --> S2
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 5. STRIPE SUBSCRIPTIONS ══ -->
+  <section id="stripe-sub">
+    <h2>💳 Stripe Subscription Flow — £29/month (Week 5, Planned)</h2>
+    <p style="color:var(--text-muted);font-size:0.87rem;margin-bottom:1rem">
+      Payment is initiated on the <strong>external marketplace website</strong>, not inside the Offcut Challenge app.
+      The app receives confirmation via Stripe webhook and grants access automatically.
+    </p>
+    <div class="diagram-wrapper" id="dw3">
+      <button class="fs-btn" onclick="toggleFS('dw3')">⛶ Full screen</button>
+      <div class="mermaid">
+sequenceDiagram
+    participant W as Customer
+    participant MKT as Marketplace Website
+    participant SC as Stripe Checkout
+    participant WH as Offcut Challenge Webhook
+    participant DB as Supabase DB
+    participant APP as Offcut Challenge App
+
+    W->>MKT: Browses product — clicks Buy Offcut Challenge
+    MKT->>SC: Create Checkout Session with price_id and customer email
+    SC-->>W: Stripe hosted checkout page
+
+    W->>SC: Enters card details and pays
+    SC-->>W: Redirect to marketplace success page
+
+    SC->>WH: checkout.session.completed
+    WH->>DB: Create workshop row with subscription_status = active and stripe_customer_id
+
+    WH->>APP: Trigger invite email via Resend
+    APP-->>W: Email with link to create Offcut Challenge account
+
+    W->>APP: Clicks link, creates account, submits verification
+    APP->>DB: Check subscription_status
+    DB-->>APP: active — grant full access
+
+    Note over W,APP: Workshop now has full marketplace access
+
+    SC->>WH: invoice.payment_failed on monthly renewal
+    WH->>DB: SET subscription_status = past_due
+
+    SC->>WH: customer.subscription.deleted
+    WH->>DB: SET subscription_status = cancelled
+    APP-->>W: Access restricted until renewed
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 6. STRIPE CONNECT ══ -->
+  <section id="stripe-connect">
+    <h2>🔄 Stripe Connect — Marketplace Transactions (Week 6, Planned)</h2>
+    <div class="diagram-wrapper" id="dw4">
+      <button class="fs-btn" onclick="toggleFS('dw4')">⛶ Full screen</button>
+      <div class="mermaid">
+sequenceDiagram
+    participant Seller as Seller Workshop
+    participant App as Next.js App
+    participant DB as Supabase DB
+    participant SE as Stripe Express
+    participant SC as Stripe Connect
+    participant Buyer as Buyer Workshop
+    participant WH as Webhook Handler
+
+    Note over Seller,SE: ONE-TIME SELLER ONBOARDING
+    Seller->>App: Click Receive Payments
+    App->>SC: Create Express account link
+    SC-->>Seller: Redirect to Stripe Express onboarding
+    Seller->>SE: Enters bank details and ID
+    SE-->>App: Redirect back with account_id
+    App->>DB: Save stripe_account_id on workshop row
+
+    Note over Buyer,WH: PURCHASE FLOW
+    Buyer->>App: Click Buy on listing
+    App->>SC: Create PaymentIntent with 5 pct fee and seller account_id
+    SC-->>Buyer: Stripe payment form
+
+    Buyer->>SC: Pays for item
+    SC->>SC: Split — 95 pct to seller, 5 pct to platform
+    SC->>WH: payment_intent.succeeded
+    WH->>DB: listing.status = sold
+    WH->>DB: stock_item.status = sold
+    WH->>DB: Create transaction record
+
+    Note over Seller,DB: Seller sees payout in their Stripe dashboard
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 7. STRIPE FULL OVERVIEW ══ -->
+  <section id="stripe-full">
+    <h2>🗺️ Stripe Integration — Complete Picture</h2>
+    <div class="diagram-wrapper" id="dw5">
+      <button class="fs-btn" onclick="toggleFS('dw5')">⛶ Full screen</button>
+      <div class="mermaid">
+flowchart TB
+    subgraph EXT["External Marketplace Website"]
+        MKT["Product storefront\nOffcut Challenge + Camera App"]
+        MKT_SC["Stripe Checkout\nhosted on marketplace site"]
+    end
+
+    subgraph SP["Stripe Platform — shared account"]
+        SS["Stripe Subscriptions\n29 per month recurring"]
+        SCo["Stripe Connect\n95 to 5 split on peer sales"]
+        SW["Stripe Webhooks\nevents fired to Offcut Challenge"]
+    end
+
+    subgraph NX["Offcut Challenge — Next.js App"]
+        WHH["Webhook handler\napi/webhooks/stripe"]
+        INVITE["Resend invite email\nto new subscriber"]
+        BUY["Buy button\nPaymentIntent creation"]
+        GATE["Subscription gate check\non protected routes"]
+    end
+
+    subgraph SB["Supabase Database"]
+        WS["workshops\nsubscription_status\nstripe_customer_id\nstripe_account_id"]
+        TX["transactions\nbuyer_id, seller_id\namount and fee in pence"]
+        LI["listings\nstatus active to sold"]
+    end
+
+    NewCustomer -->|Buys subscription| MKT
+    MKT --> MKT_SC --> SS
+    SS --> SW
+    SW -->|checkout.session.completed| WHH
+    SW -->|invoice.payment_failed| WHH
+    SW -->|customer.subscription.deleted| WHH
+    SW -->|payment_intent.succeeded| WHH
+    WHH --> WS
+    WHH --> TX
+    WHH --> LI
+    WHH --> INVITE
+    INVITE -->|Email with app access link| NewCustomer
+    WS --> GATE
+    ExistingUser -->|Buys a listing in-app| BUY
+    BUY --> SCo --> SW
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 8. CAMERA APP ══ -->
+  <section id="camera">
+    <h2>📷 Camera App Integration Flow (Planned)</h2>
+    <div class="diagram-wrapper" id="dw6">
+      <button class="fs-btn" onclick="toggleFS('dw6')">⛶ Full screen</button>
+      <div class="mermaid">
+flowchart LR
+    subgraph HW["Camera Hardware"]
+        RS["Intel RealSense Depth Camera\nor USB 2D Camera"]
+        CNC["CNC Bed or Scanning Surface"]
+    end
+
+    subgraph PY["Python Desktop App — PySide6 + OpenCV"]
+        CV["Shape detection"]
+        CL["Classify shape\nRECT L C POLY by vertex count"]
+        ME["Measure vertices, bbox, area\nthickness from depth sensor"]
+        OP["Operator enters\nmaterial, qty, notes"]
+        SV["Operator clicks Save\none scan at a time"]
+        DEST{"Push destination"}
+        GS["Google Sheets\nvia Apps Script"]
+        API["POST JSON bundle\nto Offcut Challenge API\nwith API key in header"]
+    end
+
+    subgraph NX["Next.js API — api/camera/ingest"]
+        VER["Verify API key\nResolve to workshop"]
+        CR["Create stock_item\nstatus = available\nsource = camera"]
+    end
+
+    subgraph DASH["Workshop Dashboard"]
+        DR["Draft stock items\nstatus = available"]
+        RV["Workshop reviews\nand edits if needed"]
+        PB["Publish — enters price"]
+        LST["Listing created\nvisible on Browse page"]
+    end
+
+    CNC --> RS --> CV
+    CV --> CL --> ME --> OP --> SV --> DEST
+    DEST -->|"Option 1 — standalone"| GS
+    DEST -->|"Option 2 — with Offcut sub"| API
+    API --> VER --> CR --> DR
+    DR --> RV --> PB --> LST
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 9. DATABASE SCHEMA ══ -->
+  <section id="schema">
+    <h2>🗄️ Database Schema</h2>
+
+    <div class="diagram-wrapper" id="dw7">
+      <button class="fs-btn" onclick="toggleFS('dw7')">⛶ Full screen</button>
+      <div class="mermaid">
+erDiagram
+    workshops {
+        uuid id PK
+        text name
+        text slug
+        text postcode
+        float8 lat
+        float8 lng
+        text verification_status
+        text companies_house_number
+        text stripe_customer_id
+        text stripe_account_id
+        text subscription_status
+    }
+    profiles {
+        uuid id PK
+        uuid workshop_id FK
+        timestamptz created_at
+    }
+    stock_items {
+        uuid id PK
+        uuid workshop_id FK
+        text source
+        text shape_type
+        text category
+        text material
+        text finish
+        int length_mm
+        int width_mm
+        int thickness_mm
+        float bbox_w_mm
+        float bbox_h_mm
+        float area_mm2
+        jsonb vertices_mm
+        text svg_path_data
+        int quantity
+        text status
+    }
+    listings {
+        uuid id PK
+        uuid workshop_id FK
+        uuid stock_item_id FK
+        text category
+        text material
+        text finish
+        int length_mm
+        int width_mm
+        int price_pence
+        int quantity
+        text status
+    }
+    listing_images {
+        uuid id PK
+        uuid listing_id FK
+        text storage_path
+        int position
+    }
+
+    workshops ||--o{ profiles : "has users"
+    workshops ||--o{ stock_items : "owns"
+    workshops ||--o{ listings : "sells"
+    stock_items ||--o| listings : "published as"
+    listings ||--o{ listing_images : "has photos"
+      </div>
+    </div>
+
+    <div class="db-grid">
+      <div class="db-table">
+        <div class="db-head">🏭 workshops</div>
+        <div class="db-col"><span class="col-name pk">id</span><span class="col-type">uuid PK</span></div>
+        <div class="db-col"><span class="col-name">name</span><span class="col-type">text</span></div>
+        <div class="db-col"><span class="col-name">slug</span><span class="col-type">text unique</span></div>
+        <div class="db-col"><span class="col-name">companies_house_number</span><span class="col-type">text</span></div>
+        <div class="db-col"><span class="col-name">postcode / lat / lng</span><span class="col-type">text / float8</span></div>
+        <div class="db-col"><span class="col-name">verification_status</span><span class="col-type">text</span><span class="col-note">unverified→approved</span></div>
+        <div class="db-col"><span class="col-name">stripe_customer_id</span><span class="col-type">text</span><span class="col-note">planned</span></div>
+        <div class="db-col"><span class="col-name">stripe_account_id</span><span class="col-type">text</span><span class="col-note">Connect — planned</span></div>
+        <div class="db-col"><span class="col-name">subscription_status</span><span class="col-type">text</span><span class="col-note">planned</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-head">📦 stock_items</div>
+        <div class="db-col"><span class="col-name pk">id</span><span class="col-type">uuid PK</span></div>
+        <div class="db-col"><span class="col-name fk">workshop_id</span><span class="col-type">uuid FK</span></div>
+        <div class="db-col"><span class="col-name">source</span><span class="col-type">text</span><span class="col-note">manual / camera</span></div>
+        <div class="db-col"><span class="col-name">shape_type</span><span class="col-type">text</span><span class="col-note">RECT / L / C / POLY</span></div>
+        <div class="db-col"><span class="col-name">category / material / finish</span><span class="col-type">text</span></div>
+        <div class="db-col"><span class="col-name">length_mm / width_mm / thickness_mm</span><span class="col-type">int</span></div>
+        <div class="db-col"><span class="col-name">bbox_w_mm / bbox_h_mm / area_mm2</span><span class="col-type">float</span><span class="col-note">camera shapes</span></div>
+        <div class="db-col"><span class="col-name">vertices_mm</span><span class="col-type">jsonb</span><span class="col-note">null for RECT</span></div>
+        <div class="db-col"><span class="col-name">svg_path_data</span><span class="col-type">text</span><span class="col-note">null for RECT</span></div>
+        <div class="db-col"><span class="col-name">status</span><span class="col-type">text</span><span class="col-note">available→listed→sold</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-head">🏪 listings</div>
+        <div class="db-col"><span class="col-name pk">id</span><span class="col-type">uuid PK</span></div>
+        <div class="db-col"><span class="col-name fk">workshop_id</span><span class="col-type">uuid FK</span></div>
+        <div class="db-col"><span class="col-name fk">stock_item_id</span><span class="col-type">uuid FK</span></div>
+        <div class="db-col"><span class="col-name">category / material / finish</span><span class="col-type">text</span></div>
+        <div class="db-col"><span class="col-name">length_mm / width_mm / thickness_mm</span><span class="col-type">int</span></div>
+        <div class="db-col"><span class="col-name">price_pence</span><span class="col-type">int</span><span class="col-note">stored in pence</span></div>
+        <div class="db-col"><span class="col-name">quantity</span><span class="col-type">int</span></div>
+        <div class="db-col"><span class="col-name">status</span><span class="col-type">text</span><span class="col-note">active→sold→archived</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-head">🖼️ listing_images</div>
+        <div class="db-col"><span class="col-name pk">id</span><span class="col-type">uuid PK</span></div>
+        <div class="db-col"><span class="col-name fk">listing_id</span><span class="col-type">uuid FK</span></div>
+        <div class="db-col"><span class="col-name">storage_path</span><span class="col-type">text</span><span class="col-note">Supabase Storage</span></div>
+        <div class="db-col"><span class="col-name">position</span><span class="col-type">int</span><span class="col-note">display order</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-head">👤 profiles</div>
+        <div class="db-col"><span class="col-name pk">id</span><span class="col-type">uuid PK = auth.users.id</span></div>
+        <div class="db-col"><span class="col-name fk">workshop_id</span><span class="col-type">uuid FK</span></div>
+        <div class="db-col"><span class="col-name">created_at</span><span class="col-type">timestamptz</span></div>
+        <div class="db-note">Auto-created via DB trigger on auth.users insert</div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-head">📋 Migrations</div>
+        <div class="db-col"><span class="col-name">001</span><span class="col-type">initial_schema</span></div>
+        <div class="db-col"><span class="col-name">002</span><span class="col-type">listing_images</span></div>
+        <div class="db-col"><span class="col-name">003</span><span class="col-type">categories</span></div>
+        <div class="db-col"><span class="col-name">004</span><span class="col-type">verification</span></div>
+        <div class="db-col"><span class="col-name">005</span><span class="col-type">geocoding</span></div>
+        <div class="db-col"><span class="col-name">006</span><span class="col-type">stock_items</span></div>
+        <div class="db-note" style="color:var(--accent5)">Next: 007 — Stripe columns on workshops</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 10. ROUTES ══ -->
+  <section id="routes">
+    <h2>🗺️ Route Map</h2>
+    <div class="route-grid">
+      <div class="route-item"><span class="route-path">/</span><span class="route-desc">Public landing page</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/auth/login</span><span class="route-desc">Email/password login</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/auth/signup</span><span class="route-desc">Register new workshop user</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/onboarding</span><span class="route-desc">Create workshop name — required post-signup</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/verification</span><span class="route-desc">Submit CH number, VAT, location for approval</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/dashboard</span><span class="route-desc">Stock inventory + verification status banner</span><span class="route-status s-part">partial</span></div>
+      <div class="route-item"><span class="route-path">/listings</span><span class="route-desc">Browse all active listings with filters</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/listings/new</span><span class="route-desc">Add stock and publish to marketplace immediately</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/listings/[id]</span><span class="route-desc">Listing detail, photo gallery, upload (owner only)</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/workshops</span><span class="route-desc">UK map of all approved workshops (Leaflet)</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/workshops/[slug]</span><span class="route-desc">Workshop profile page</span><span class="route-status s-plan">next up</span></div>
+      <div class="route-item"><span class="route-path">/admin</span><span class="route-desc">Admin panel — rufus only</span><span class="route-status s-live">live</span></div>
+      <div class="route-item"><span class="route-path">/subscribe</span><span class="route-desc">£29/month Stripe Checkout flow</span><span class="route-status s-plan">Week 5</span></div>
+      <div class="route-item"><span class="route-path">/api/webhooks/stripe</span><span class="route-desc">Stripe webhook handler (subscriptions + Connect)</span><span class="route-status s-plan">Week 5–6</span></div>
+      <div class="route-item"><span class="route-path">/api/camera/ingest</span><span class="route-desc">Camera app POST — API key auth → stock_items</span><span class="route-status s-plan">camera</span></div>
+    </div>
+  </section>
+
+  <!-- ══ 11. ROADMAP ══ -->
+  <section id="roadmap">
+    <h2>📅 Build Roadmap</h2>
+    <div class="card">
+      <div class="timeline">
+        <div class="tl-item done">
+          <div class="tl-week">Week 1 ✓</div>
+          <div class="tl-title">Foundation</div>
+          <ul class="tl-list"><li>Next.js 15 + Supabase Auth + Vercel deployment</li></ul>
+        </div>
+        <div class="tl-item done">
+          <div class="tl-week">Week 2 ✓</div>
+          <div class="tl-title">Database &amp; Listings</div>
+          <ul class="tl-list"><li>Schema: workshops, profiles, listings + RLS</li><li>Workshop onboarding, create/browse listings</li></ul>
+        </div>
+        <div class="tl-item done">
+          <div class="tl-week">Week 3 ✓</div>
+          <div class="tl-title">Photos, Search, Filters</div>
+          <ul class="tl-list"><li>Supabase Storage for listing photos</li><li>Browse filters: category, material, finish, price, postcode distance</li></ul>
+        </div>
+        <div class="tl-item done">
+          <div class="tl-week">Week 4 ✓</div>
+          <div class="tl-title">Verification, Admin, Map</div>
+          <ul class="tl-list"><li>Companies House API + admin approval panel</li><li>Workshop map (Leaflet), geocoding, Resend email alerts</li></ul>
+        </div>
+        <div class="tl-item now">
+          <div class="tl-week">In Progress ◉</div>
+          <div class="tl-title">Stock / Marketplace Split</div>
+          <ul class="tl-list"><li>stock_items table as canonical inventory</li><li>Dashboard stock view with sold and archive actions</li><li>Camera-ready schema columns present from day one</li></ul>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">Week 5</div>
+          <div class="tl-title">Stripe Subscriptions</div>
+          <ul class="tl-list"><li>Stripe Checkout + subscription gate middleware</li><li>Webhook: subscription_status on workshops table</li><li>Apply for Stripe Connect platform access</li></ul>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">Week 6</div>
+          <div class="tl-title">Stripe Connect — Transactions</div>
+          <ul class="tl-list"><li>Seller Express account onboarding</li><li>Buy button + PaymentIntent with 95/5 split</li><li>Transaction records in DB</li></ul>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">Week 7</div>
+          <div class="tl-title">Messaging, Emails, Polish</div>
+          <ul class="tl-list"><li>Buyer–seller messaging</li><li>Transactional emails via Resend</li><li>Multi-user workshop invites, mobile improvements</li></ul>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">Week 8</div>
+          <div class="tl-title">Soft Launch</div>
+          <ul class="tl-list"><li>Invite 5–10 real UK workshops</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 12. CATEGORIES ══ -->
+  <section id="cats">
+    <h2>🏷️ Categories &amp; Materials</h2>
+    <div class="cat-grid">
+      <div class="cat-card">
+        <div class="cat-title">Wood</div>
+        <div class="cat-row"><strong>Materials</strong><span>MDF, Plywood, Chipboard, Oak, Birch ply, Pine, Walnut, Beech</span></div>
+        <div class="cat-row"><strong>Finishes</strong><span>Raw, White melamine, Oak veneer, Walnut veneer, Black melamine, Birch faced, Pre-primed, Laminated</span></div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-title">Metal</div>
+        <div class="cat-row"><strong>Materials</strong><span>Mild steel, Stainless steel, Aluminium, Copper, Brass, Cast iron</span></div>
+        <div class="cat-row"><strong>Finishes</strong><span>Raw, Powder coated, Galvanised, Brushed, Anodised, Painted, Polished</span></div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-title">Plastic</div>
+        <div class="cat-row"><strong>Materials</strong><span>Acrylic, HDPE, Polypropylene, PVC, Polycarbonate, ABS</span></div>
+        <div class="cat-row"><strong>Finishes</strong><span>Natural, Clear, Frosted, Coloured, Textured</span></div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-title">Other</div>
+        <div class="cat-row"><strong>Materials</strong><span>Foam, Rubber, Cork, Composite, Carbon fibre, Glass</span></div>
+        <div class="cat-row"><strong>Finishes</strong><span>Raw, Coated, Treated</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="text-align:center;padding:2rem 0;color:var(--text-muted);font-size:0.78rem;border-top:1px solid var(--border)">
+    Offcut Challenge — Internal Architecture Reference — 2026-05-11
+  </footer>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: { curve: 'basis', padding: 20 },
+    sequence: { diagramMarginX: 20, diagramMarginY: 10, actorMargin: 60, boxMargin: 10 },
+    er: { diagramPadding: 20 },
+  });
+
+  // Full-screen toggle
+  function toggleFS(id) {
+    const el = document.getElementById(id);
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    const isFS = !!document.fullscreenElement;
+
+    document.querySelectorAll('.fs-btn').forEach(btn => {
+      btn.textContent = isFS ? '✕ Exit full screen' : '⛶ Full screen';
+    });
+
+    if (isFS) {
+      // Strip hardcoded pixel dimensions so CSS can scale the SVG freely.
+      // The viewBox is preserved, so aspect ratio is maintained automatically.
+      document.fullscreenElement.querySelectorAll('svg').forEach(svg => {
+        svg.dataset.fsW = svg.getAttribute('width') || '';
+        svg.dataset.fsH = svg.getAttribute('height') || '';
+        svg.removeAttribute('width');
+        svg.removeAttribute('height');
+      });
+    } else {
+      // Restore original dimensions so the diagram looks normal on the page.
+      document.querySelectorAll('svg[data-fs-w]').forEach(svg => {
+        if (svg.dataset.fsW) svg.setAttribute('width', svg.dataset.fsW);
+        if (svg.dataset.fsH) svg.setAttribute('height', svg.dataset.fsH);
+        delete svg.dataset.fsW;
+        delete svg.dataset.fsH;
+      });
+    }
+  });
+
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('.nav-link');
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('.nav-link[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

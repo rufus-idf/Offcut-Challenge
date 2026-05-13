@@ -79,18 +79,21 @@ Every offcut exists in two possible states:
 
 ### How items flow
 ```
-Camera scan → stock_item (draft, available)
-                    ↓ workshop reviews
-              publish to marketplace → listing (active, public)
+Camera scan → stock_item (source=camera, status=available)
+                    ↓ workshop reviews in dashboard
+              /stock/[id]/publish → set finish + price → listing (active, public)
 
-Manual entry → stock_item (available) + listing (active)  [created together, published immediately]
+Manual entry → /listings/new → stock_item (source=manual, status=available)
+                    ↓ workshop reviews in dashboard
+              /stock/[id]/publish → set finish + price → listing (active, public)
+
                     ↓ when sold
               stock_item.status = sold, listing.status = sold
 ```
 
 ### Key decisions
-- **Manual rectangular listings** auto-publish to the marketplace in one step (no separate publish action needed). The stock item is created silently underneath.
-- **Camera scans** land in stock first as drafts, workshop reviews and publishes separately. (Camera integration not yet built.)
+- **Both manual and camera items follow the same two-step flow**: add to stock → review in dashboard → publish to marketplace with price. There is no auto-publish. This gives workshops a chance to review before going live.
+- **Camera scans** land in stock first as drafts (finish=null, status=available). Workshop sets finish and price at publish time.
 - **Price belongs to the listing**, not the stock item. Stock tracks what you have; listings track what you're selling and for how much.
 - **Manual listings are rectangular only** (length × width × thickness). Camera adds support for L, C, and POLY shapes.
 - The stock layer uses a camera-ready schema from day one — shape columns (vertices_mm, svg_path_data etc.) are present but null for manual entries.
@@ -243,20 +246,27 @@ Finishes: Raw / unfinished, Coated, Treated
 - Resend email alert on verification submission
 - Location geocoding (postcodes.io), distance sorting
 
-### Stock/marketplace split (in progress)
-- stock_items table as canonical inventory
-- Manual listings create stock_item + listing together (auto-published)
-- Dashboard shows stock inventory with sold/archive actions
+### Stock/marketplace split (complete)
+- stock_items table as canonical inventory (source: manual or camera)
+- Two-step flow: /listings/new creates stock_item → /stock/[id]/publish creates listing with price
+- Dashboard shows stock inventory with filter tabs (all / in stock / listed / sold / archived)
+- Sold, archive, and relist actions on dashboard rows
+- Edit stock item before publish: /stock/[id]/edit (available items only)
+- Edit listing after publish: /listings/[id]/edit (price, quantity, finish, description)
+- Camera API endpoint live at /api/ingest — API key auth, creates draft stock_items
+- API key management in dashboard (approved workshops only)
 - Camera-ready schema columns present on stock_items from day one
+- Workshop profile page: /workshops/[slug] — shows active listings for any approved workshop
 
 ---
 
 ## What's next
 
-### Immediate
-- Finish stock/marketplace split (in progress)
-- Edit a listing after creation
-- Workshop profile page (/workshops/[slug])
+### Immediate — Stripe
+- Register Stripe account (sole trader or Ltd company)
+- Apply for Stripe Connect platform access
+- Build separate marketplace/storefront website (separate Next.js repo)
+- Stripe Payment Link on storefront → webhook in app → invite email via Resend
 
 ### Week 5 — Stripe Subscriptions
 - Register Stripe account (sole trader or Ltd company)
