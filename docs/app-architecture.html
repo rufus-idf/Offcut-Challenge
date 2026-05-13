@@ -371,6 +371,7 @@
   <a class="nav-link" href="#routes">Routes</a>
   <a class="nav-link" href="#roadmap">Roadmap</a>
   <a class="nav-link" href="#mobile">Mobile App</a>
+  <a class="nav-link" href="#future">Future Features</a>
   <a class="nav-link" href="#cats">Categories</a>
 </nav>
 
@@ -1046,6 +1047,18 @@ erDiagram
             <li>Do not start until web is fully launched and Stripe is live</li>
           </ul>
         </div>
+        <div class="tl-item">
+          <div class="tl-week">Phase 6 — Future</div>
+          <div class="tl-title">Advanced Marketplace Features</div>
+          <ul class="tl-list">
+            <li>In-app messaging with fraud/fee-evasion monitoring</li>
+            <li>Offer &amp; negotiation system (counter-offers, expiry, Stripe on accept)</li>
+            <li>Bundle / quantity discount tiers on listings</li>
+            <li>AI photo verification for uploaded listing images</li>
+            <li>AI chatbot for natural-language material search</li>
+            <li>Discord community bot — new listing alerts &amp; stock notifications</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
@@ -1148,6 +1161,123 @@ flowchart TB
           </ul>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══ FUTURE FEATURES ══ -->
+  <section id="future">
+    <h2>🔮 Future Features — Phase 6+</h2>
+    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:1.2rem">
+      Identified for development after the core platform is stable and live (Phases 1–5). Detailed design required before implementation.
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.2rem">
+
+      <!-- In-app messaging -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">💬</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">In-App Messaging &amp; Enquiry Tracking</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Replace email-only enquiries with real-time in-app chat. Every message is stored and admin-auditable to prevent fraud and out-of-app transactions.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Message threads tied to a specific listing for context</li>
+          <li>Auto-moderation: flag bank details, external payment links, phone numbers</li>
+          <li>Typing indicators + read receipts via Supabase Realtime</li>
+          <li>Admin view of all flagged conversations</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: messages table · Supabase Realtime · server-side moderation on insert
+        </div>
+      </div>
+
+      <!-- Offer system -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">🤝</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">Offer &amp; Negotiation System</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Buyers submit counter-offers below the listed price. Sellers can Accept, Counter, or Decline. Accepted offers trigger the Stripe payment flow automatically.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Offers expire after 48 hours with no response</li>
+          <li>Full offer history visible to both parties</li>
+          <li>Admin can view all offers for compliance</li>
+          <li>Resend email notifications on each status change</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: offers table (listing_id, price_pence, status, expires_at) · Resend
+        </div>
+      </div>
+
+      <!-- Bundle discounts -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">📦</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">Bundle &amp; Quantity Discount Tiers</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Sellers configure tiered pricing on any listing. Price per piece drops automatically as quantity increases — calculated at checkout.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Example: 1–4 pieces £12 each · 5–9 £10 · 10+ £8</li>
+          <li>Pricing table shown on listing cards and detail page</li>
+          <li>Applied automatically based on buyer's selected quantity</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: listing_price_tiers table (listing_id, min_qty, price_pence)
+        </div>
+      </div>
+
+      <!-- Photo verification -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">🔍</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">AI Photo Verification</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">When photos are uploaded, an AI check verifies the image is plausibly relevant to the declared material and category. Mismatches are flagged for admin review — not blocked outright.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>Detects obvious mismatches (face photo on an oak board listing)</li>
+          <li>Confidence score stored on listing_images</li>
+          <li>Listings remain live — admin reviews flagged photos</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: Claude API (vision) in upload Server Action · verification_status on listing_images
+        </div>
+      </div>
+
+      <!-- AI chatbot -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">🤖</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">In-App AI Material Search Chatbot</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Natural language search inside the app. Type a requirement and the chatbot queries live listings and surfaces workshops that regularly stock those materials.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>"I need 20 sheets of 18mm birch ply within 50 miles of Bristol"</li>
+          <li>Claude API with tool use runs structured DB queries</li>
+          <li>Streamed responses with direct links to matching listings</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: Claude API (tool use) · streamed UI · /chat route
+        </div>
+      </div>
+
+      <!-- Discord -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem">
+          <span style="font-size:1.4rem">🎮</span>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text)">Discord Community &amp; Stock Alert Bot</h3>
+        </div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Official Discord server for the Offcut Challenge community with a bot that posts new listings and sends personalised stock alerts to subscribed workshops.</p>
+        <ul style="font-size:0.82rem;color:var(--text-muted);margin-left:1.1rem;list-style:disc;line-height:1.8">
+          <li>#new-listings: auto-post when items go live (filterable by category)</li>
+          <li>#stock-alerts: subscribe to specific materials or dimensions</li>
+          <li>Bot command: <code>!search oak 18mm</code> returns live matching listings</li>
+          <li>Platform release notes pushed automatically</li>
+        </ul>
+        <div style="margin-top:0.9rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--accent2);font-weight:600">
+          Tech: Discord.js bot · Supabase webhooks / pg_notify · Discord REST API
+        </div>
+      </div>
+
     </div>
   </section>
 

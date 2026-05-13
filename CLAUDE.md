@@ -405,3 +405,51 @@ Endpoint verifies key, resolves workshop, creates draft stock_item.
 - Camera's offcut_id (e.g. COOP-RECT-48234.5) can collide — always use Supabase UUID as PK.
 - Human review always required — operator clicks Save per scan, nothing auto-submits.
 - stock_items schema already includes all camera columns — no schema changes needed when camera integration is built.
+
+---
+
+## Future Features — Phase 6+
+
+The following features have been identified for development after the core platform (Phases 1–5) is stable and live. These are architectural ideas — detailed design work is required before implementation begins.
+
+### In-app messaging and enquiry tracking
+- Replace the current email-only enquiry system with real-time in-app chat between buyer and seller workshops
+- Every message stored in the database and auditable by admin — prevents fraud and out-of-app transaction attempts
+- Auto-moderation: flag or block messages containing bank account details, external payment links, phone numbers, or WhatsApp references (fee evasion prevention)
+- Message threads linked to a specific listing so full context is preserved alongside the conversation
+- Typing indicators and read receipts via Supabase Realtime subscriptions
+- Tech: `messages` table (id, listing_id, sender_workshop_id, body, flagged, created_at), Supabase Realtime for live UI updates, server-side moderation on insert
+
+### Offer and negotiation system
+- Buyers can submit a counter-offer below the listed price on any active listing
+- Seller receives in-app notification + email and can: Accept (locks in price, triggers payment), Counter (new price), or Decline
+- Offers expire automatically after 48 hours with no response
+- Full offer history visible to both parties; admin can view all offers for compliance monitoring
+- Tech: `offers` table (listing_id, buyer_workshop_id, offered_price_pence, status, expires_at), Resend for email notifications
+
+### Bundle and quantity discount tiers
+- Sellers set tiered pricing on a listing: e.g. 1–4 pieces at £12 each, 5–9 at £10 each, 10+ at £8 each
+- Tier pricing automatically calculated at checkout based on quantity selected by buyer
+- Pricing tiers displayed clearly on listing cards and the listing detail page
+- Tech: `listing_price_tiers` table (listing_id, min_qty, price_pence) or a JSON column on listings — to be decided at design time
+
+### Photo verification
+- During photo upload, run a lightweight AI check to verify the image is plausibly relevant to the declared material and category
+- Flag obvious mismatches (e.g. a person's face uploaded for an oak board listing) for admin review — not an outright block, listings remain live
+- Result and confidence score stored on `listing_images` for admin visibility
+- Tech: Anthropic Claude API (vision) called server-side inside the upload Server Action; result stored in a `verification_status` column on listing_images
+
+### In-app AI chatbot for material search
+- Natural language search: "I need 20 pieces of 18mm birch ply, at least 1200mm long, within 50 miles of Bristol"
+- Claude API with tool use parses the request and runs a structured query against `listings`
+- Returns matching results inside the chat UI with direct links to listings
+- Can also surface workshops that regularly stock requested materials based on sold/listed history
+- Tech: Claude API (tool use / function calling), streamed responses, dedicated `/chat` route in the app
+
+### Discord community and stock alert bot
+- Official Offcut Challenge Discord server for the workshop community: announcements, tips, and platform updates
+- `#new-listings` channel: bot posts automatically when new items go live — includes material, dimensions, price, and workshop location, with category filtering
+- `#stock-alerts`: workshops subscribe to notifications for specific materials or dimensions (e.g. "notify me when 18mm+ oak boards appear")
+- Bot commands: `!search [material] [thickness]` returns matching live listings inline in Discord
+- Platform release notes pushed to Discord automatically
+- Tech: Discord.js bot, Supabase database webhooks or pg_notify triggering bot events, Discord REST API for message posting
