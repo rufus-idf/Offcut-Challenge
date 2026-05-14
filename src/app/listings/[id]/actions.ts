@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEnquiryEmail } from '@/lib/resend'
 
 export async function enquireListing(formData: FormData) {
@@ -10,13 +11,13 @@ export async function enquireListing(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const listingId   = formData.get('listing_id') as string
+  const listingId    = formData.get('listing_id') as string
   const requestedQty = parseInt(formData.get('quantity') as string, 10)
 
   const [{ data: listing }, { data: profile }] = await Promise.all([
     supabase
       .from('listings')
-      .select('material, finish, price_pence, quantity, workshops(name)')
+      .select('material, finish, price_pence, quantity, workshop_id, workshops(name)')
       .eq('id', listingId)
       .single(),
     supabase
@@ -28,18 +29,38 @@ export async function enquireListing(formData: FormData) {
 
   if (!listing || !profile) redirect(`/listings/${listingId}`)
 
-  const sellerName = (listing.workshops as unknown as { name: string }).name
-  const buyerName  = (profile.workshops as unknown as { name: string }).name
+  const sellerWorkshopName = (listing.workshops as unknown as { name: string }).name
+  const buyerWorkshopName  = (profile.workshops as unknown as { name: string }).name
   const qty = Math.min(Math.max(1, requestedQty), listing.quantity)
 
+  // Look up the seller's email via the admin client (bypasses RLS to read auth.users)
+  let sellerEmail = 'rufus@i-designfurniture.com' // safe fallback — admin is notified
+  try {
+    const admin = createAdminClient()
+    const { data: sellerProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('workshop_id', listing.workshop_id)
+      .single()
+
+    if (sellerProfile) {
+      const { data: { user: sellerUser } } = await admin.auth.admin.getUserById(sellerProfile.id)
+      if (sellerUser?.email) sellerEmail = sellerUser.email
+    }
+  } catch (err) {
+    console.error('Could not resolve seller email, falling back to admin:', err)
+  }
+
   sendEnquiryEmail({
-    buyerWorkshop: buyerName,
-    sellerWorkshop: sellerName,
-    material: listing.material,
-    finish: listing.finish,
-    pricePence: listing.price_pence,
-    requestedQty: qty,
-    listingUrl: `https://offcut-challenge.vercel.app/listings/${listingId}`,
+    sellerEmail,
+    sellerWorkshop: sellerWorkshopName,
+    buyerEmail:     user.email!,
+    buyerWorkshop:  buyerWorkshopName,
+    material:       listing.material,
+    finish:         listing.finish,
+    pricePence:     listing.price_pence,
+    requestedQty:   qty,
+    listingUrl:     `https://offcut-challenge.vercel.app/listings/${listingId}`,
   }).catch(() => {})
 
   redirect(`/listings/${listingId}?enquired=1`)
