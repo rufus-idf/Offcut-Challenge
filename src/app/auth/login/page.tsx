@@ -6,9 +6,9 @@ import { login } from '../actions'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; redirect?: string }>
 }) {
-  const { error } = await searchParams
+  const { error, redirect: redirectTo } = await searchParams
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
@@ -26,7 +26,16 @@ export default async function LoginPage({
             </p>
           )}
 
+          {redirectTo?.startsWith('/invite/') && (
+            <p className="mb-4 rounded-lg bg-[#E8F7EE] px-4 py-3 text-sm text-[#1C7040]">
+              Log in to accept your workshop invitation.
+            </p>
+          )}
+
           <form action={login} className="flex flex-col gap-4">
+            {redirectTo && (
+              <input type="hidden" name="redirect" value={redirectTo} />
+            )}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-medium text-stone-700">
                 Email
@@ -66,7 +75,10 @@ export default async function LoginPage({
 
         <p className="mt-4 text-center text-sm text-stone-500">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="font-medium text-[#2A9E5A] hover:text-[#1C7040]">
+          <Link
+            href={redirectTo ? `/auth/signup?redirect=${encodeURIComponent(redirectTo)}` : '/auth/signup'}
+            className="font-medium text-[#2A9E5A] hover:text-[#1C7040]"
+          >
             Sign up
           </Link>
         </p>

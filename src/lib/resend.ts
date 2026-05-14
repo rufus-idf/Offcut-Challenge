@@ -122,6 +122,66 @@ export async function sendEnquiryEmail({
   }
 }
 
+// ─── Team invite ─────────────────────────────────────────────────────────────
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://offcut-challenge.vercel.app'
+
+export async function sendInviteEmail({
+  invitedEmail,
+  workshopName,
+  invitedByEmail,
+  token,
+}: {
+  invitedEmail: string
+  workshopName: string
+  invitedByEmail: string
+  token: string
+}) {
+  const inviteUrl = `${APP_URL}/invite/${token}`
+
+  await resend.emails.send({
+    from:    FROM,
+    to:      invitedEmail,
+    subject: `You've been invited to join ${workshopName} on Offcut Challenge`,
+    html: `
+      <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1C1C1E">
+
+        <div style="background:#1C1C1E;padding:20px 24px;border-radius:12px 12px 0 0">
+          <span style="color:#fff;font-size:1.1rem;font-weight:700">Offcut</span><span style="color:#3DBE72;font-size:1.1rem;font-weight:700">Challenge</span>
+        </div>
+
+        <div style="border:1px solid #e5e5e0;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px">
+          <h2 style="margin:0 0 8px;font-size:1.15rem">You've been invited to join a workshop</h2>
+          <p style="margin:0 0 24px;color:#6b6b6a;font-size:0.9rem">
+            <strong style="color:#1C1C1E">${invitedByEmail}</strong> has invited you to join
+            <strong style="color:#1C1C1E">${workshopName}</strong> on Offcut Challenge.
+          </p>
+
+          <div style="background:#E8F7EE;border-radius:8px;padding:16px;margin-bottom:24px">
+            <p style="margin:0 0 4px;font-weight:600;color:#1C7040;font-size:0.88rem">What you'll be able to do</p>
+            <p style="margin:0;color:#2A9E5A;font-size:0.88rem">
+              Add stock, publish listings, and manage inventory for ${workshopName}.
+            </p>
+          </div>
+
+          <a href="${inviteUrl}"
+             style="display:inline-block;background:#3DBE72;color:#fff;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:0.9rem">
+            Accept invitation →
+          </a>
+
+          <p style="margin-top:24px;font-size:0.8rem;color:#aeaeac">
+            This invite expires in 7 days. If you weren't expecting this, you can ignore this email.
+          </p>
+          <p style="margin-top:8px;font-size:0.78rem;color:#c0c0be">
+            Or copy this link: ${inviteUrl}
+          </p>
+        </div>
+
+      </div>
+    `,
+  })
+}
+
 // ─── Verification alert ──────────────────────────────────────────────────────
 
 export async function sendVerificationAlert(workshopName: string, town: string, chNumber: string) {

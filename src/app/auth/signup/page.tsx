@@ -6,9 +6,9 @@ import { signup } from '../actions'
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string }>
+  searchParams: Promise<{ error?: string; message?: string; redirect?: string }>
 }) {
-  const { error, message } = await searchParams
+  const { error, message, redirect: redirectTo } = await searchParams
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
@@ -33,7 +33,16 @@ export default async function SignupPage({
             </p>
           )}
 
+          {redirectTo?.startsWith('/invite/') && (
+            <p className="mb-4 rounded-lg bg-[#E8F7EE] px-4 py-3 text-sm text-[#1C7040]">
+              Create an account to accept your workshop invitation.
+            </p>
+          )}
+
           <form action={signup} className="flex flex-col gap-4">
+            {redirectTo && (
+              <input type="hidden" name="redirect" value={redirectTo} />
+            )}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-medium text-stone-700">
                 Email
@@ -74,7 +83,10 @@ export default async function SignupPage({
 
         <p className="mt-4 text-center text-sm text-stone-500">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-[#2A9E5A] hover:text-[#1C7040]">
+          <Link
+            href={redirectTo ? `/auth/login?redirect=${encodeURIComponent(redirectTo)}` : '/auth/login'}
+            className="font-medium text-[#2A9E5A] hover:text-[#1C7040]"
+          >
             Log in
           </Link>
         </p>

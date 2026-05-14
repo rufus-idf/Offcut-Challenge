@@ -5,10 +5,11 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { getLogoUrl } from '@/lib/format'
-import { updateWebsiteUrl, uploadLogo, removeLogo } from './actions'
+import { updateWebsiteUrl, uploadLogo, removeLogo, sendInvite, cancelInvite, removeMember } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 import { AccountSummary } from './account-summary'
 import type { SummaryData } from './account-summary'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
@@ -130,10 +131,40 @@ export default async function SettingsPage({
     memberSince:      new Date(workshop.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
   }
 
+  // ── Team data ─────────────────────────────────────────────────────────────
+  const admin = createAdminClient()
+
+  const [{ data: memberProfiles }, { data: pendingInvites }] = await Promise.all([
+    admin
+      .from('profiles')
+      .select('id, role, created_at')
+      .eq('workshop_id', workshop.id),
+    supabase
+      .from('invitations')
+      .select('id, invited_email, created_at, expires_at')
+      .eq('workshop_id', workshop.id)
+      .eq('status', 'pending'),
+  ])
+
+  const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 200 })
+  const emailById = Object.fromEntries((authUsers ?? []).map(u => [u.id, u.email ?? '']))
+
+  const members = (memberProfiles ?? []).map(p => ({
+    id:        p.id,
+    email:     emailById[p.id] ?? '',
+    role:      p.role as 'owner' | 'member',
+    joinedAt:  new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+  }))
+
+  const isOwner     = members.find(m => m.id === user.id)?.role === 'owner'
+  const totalMembers = members.length
+  const canInvite   = isOwner && totalMembers < 3
+
   // ── Action bindings ───────────────────────────────────────────────────────
   const websiteAction = updateWebsiteUrl.bind(null, workshop.id)
   const logoAction    = uploadLogo.bind(null, workshop.id)
   const removeAction  = removeLogo.bind(null, workshop.id)
+  const inviteAction  = sendInvite.bind(null, workshop.id)
 
   return (
     <div className="min-h-screen bg-[#FAF9F7]">
@@ -242,6 +273,103 @@ export default async function SettingsPage({
             )}
           </div>
 
+        </div>
+
+        {/* Team members */}
+        <div className="mt-6 rounded-xl border border-stone-200 bg-white shadow-sm">
+          <div className="border-b border-stone-100 px-6 py-4">
+            <h2 className="text-base font-semibold text-stone-900">Team</h2>
+            <p className="mt-0.5 text-xs text-stone-400">
+              {totalMembers} of 3 members · only the owner can invite or remove members
+            </p>
+          </div>
+
+          <div className="divide-y divide-stone-100">
+            {members.map(m => (
+              <div key={m.id} className="flex items-center justify-between px-6 py-4">
+                <div>
+                  <p className="text-sm font-medium text-stone-800">{m.email}</p>
+                  <p className="mt-0.5 text-xs text-stone-400">
+                    {m.role === 'owner' ? 'Owner' : 'Member'} · joined {m.joinedAt}
+                  </p>
+                </div>
+                {isOwner && m.role === 'member' && (
+                  <form action={removeMember.bind(null, m.id)}>
+                    <button
+                      type="submit"
+                      className="text-xs font-medium text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </form>
+                )}
+                {m.id === user.id && (
+                  <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-500">You</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Pending invites */}
+          {(pendingInvites ?? []).length > 0 && (
+            <div className="border-t border-stone-100 px-6 py-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-400">Pending invites</p>
+              <div className="space-y-2">
+                {(pendingInvites ?? []).map(inv => (
+                  <div key={inv.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-stone-700">{inv.invited_email}</p>
+                      <p className="text-xs text-stone-400">
+                        Expires {new Date(inv.expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                    {isOwner && (
+                      <form action={cancelInvite.bind(null, inv.id)}>
+                        <button
+                          type="submit"
+                          className="text-xs font-medium text-stone-400 hover:text-stone-700"
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Invite form */}
+          {canInvite && (
+            <div className="border-t border-stone-100 px-6 py-5">
+              <p className="mb-3 text-sm font-medium text-stone-700">Invite a team member</p>
+              <form action={inviteAction} className="flex gap-3">
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="colleague@email.com"
+                  className={`${inputClass} flex-1`}
+                />
+                <SubmitButton
+                  pendingText="Sending…"
+                  className="rounded-lg bg-[#3DBE72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A9E5A] disabled:opacity-60"
+                >
+                  Send invite
+                </SubmitButton>
+              </form>
+              <p className="mt-2 text-xs text-stone-400">
+                They&apos;ll receive an email with a link to join. Invite expires after 7 days.
+                {totalMembers === 2 && ' This will be your last available slot.'}
+              </p>
+            </div>
+          )}
+
+          {!canInvite && isOwner && totalMembers >= 3 && (
+            <div className="border-t border-stone-100 px-6 py-4">
+              <p className="text-sm text-stone-400">Workshop is at capacity (3/3 members).</p>
+            </div>
+          )}
         </div>
 
         {/* Account Summary — full width */}
