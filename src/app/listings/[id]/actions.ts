@@ -17,7 +17,7 @@ export async function enquireListing(formData: FormData) {
   const [{ data: listing }, { data: profile }] = await Promise.all([
     supabase
       .from('listings')
-      .select('material, finish, price_pence, quantity, workshop_id, workshops(name)')
+      .select('material, finish, price_pence, quantity, workshop_id, discount_min_qty, discount_pct, workshops(name)')
       .eq('id', listingId)
       .single(),
     supabase
@@ -51,16 +51,26 @@ export async function enquireListing(formData: FormData) {
     console.error('Could not resolve seller email, falling back to admin:', err)
   }
 
+  const discountApplied  = formData.get('discount_applied') === '1'
+  const effectivePrice   = discountApplied
+    ? parseInt(formData.get('effective_price') as string, 10) || listing.price_pence
+    : listing.price_pence
+  const discountPct      = discountApplied
+    ? parseInt(formData.get('discount_pct') as string, 10) || null
+    : null
+
   sendEnquiryEmail({
     sellerEmail,
-    sellerWorkshop: sellerWorkshopName,
-    buyerEmail:     user.email!,
-    buyerWorkshop:  buyerWorkshopName,
-    material:       listing.material,
-    finish:         listing.finish,
-    pricePence:     listing.price_pence,
-    requestedQty:   qty,
-    listingUrl:     `https://offcut-challenge.vercel.app/listings/${listingId}`,
+    sellerWorkshop:  sellerWorkshopName,
+    buyerEmail:      user.email!,
+    buyerWorkshop:   buyerWorkshopName,
+    material:        listing.material,
+    finish:          listing.finish,
+    pricePence:      listing.price_pence,
+    effectivePricePence: effectivePrice,
+    discountPct:     discountPct,
+    requestedQty:    qty,
+    listingUrl:      `https://offcut-challenge.vercel.app/listings/${listingId}`,
   }).catch(() => {})
 
   redirect(`/listings/${listingId}?enquired=1`)

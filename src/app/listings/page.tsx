@@ -234,9 +234,14 @@ export default async function BrowsePage({
                           {listing.workshops.town && <p className="text-xs text-stone-400">{listing.workshops.town}{listing.workshops.county ? `, ${listing.workshops.county}` : ''}</p>}
                           {userCoords && listing._distKm !== Infinity && <p className="mt-0.5 text-xs font-medium text-[#2A9E5A]">{formatDistance(listing._distKm)}</p>}
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
                           {shapeType && shapeType !== 'RECT' && <span className="rounded-full bg-[#E8F7EE] px-2 py-0.5 text-xs text-[#2A9E5A]">{SHAPE_LABELS[shapeType] ?? shapeType}</span>}
+                          {listing.discount_min_qty && listing.discount_pct && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              Buy {listing.discount_min_qty}+ · {listing.discount_pct}% off
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -281,8 +286,13 @@ export default async function BrowsePage({
                       {listing.workshops.town && <p className="truncate text-xs text-stone-400">{listing.workshops.town}{listing.workshops.county ? `, ${listing.workshops.county}` : ''}</p>}
                       {userCoords && listing._distKm !== Infinity && <p className="text-xs font-medium text-[#2A9E5A]">{formatDistance(listing._distKm)}</p>}
                     </div>
-                    {/* Category */}
+                    {/* Category + discount */}
                     <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{listing.category}</span>
+                    {listing.discount_min_qty && listing.discount_pct && (
+                      <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                        {listing.discount_pct}% off {listing.discount_min_qty}+
+                      </span>
+                    )}
                     {/* Price */}
                     <p className="shrink-0 font-bold text-[#2A9E5A]">{formatPrice(listing.price_pence)}</p>
                     <svg className="h-4 w-4 shrink-0 text-stone-300 group-hover:text-[#3DBE72] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>

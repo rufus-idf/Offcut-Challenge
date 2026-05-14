@@ -7,6 +7,7 @@ import { FINISHES_BY_CATEGORY, type Category } from '@/lib/constants'
 import { formatDimensions } from '@/lib/format'
 import { updateListing } from './actions'
 import { SubmitButton } from '@/components/submit-button'
+import { DiscountFields } from '@/components/discount-fields'
 
 const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
@@ -116,6 +117,11 @@ export default async function EditListingPage({
               className={`${inputClass} resize-none`}
             />
           </div>
+
+          <DiscountFields
+            initialMinQty={listing.discount_min_qty}
+            initialPct={listing.discount_pct}
+          />
 
           <div className="flex gap-3 pt-2">
             <SubmitButton

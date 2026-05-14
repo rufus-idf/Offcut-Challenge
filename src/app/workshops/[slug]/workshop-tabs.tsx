@@ -17,6 +17,8 @@ type ListingRow = {
   thickness_mm: number | null
   quantity: number
   price_pence: number
+  discount_min_qty: number | null
+  discount_pct: number | null
   listing_images: { storage_path: string }[]
   stock_items: {
     shape_type: string
@@ -166,6 +168,13 @@ export function WorkshopTabs({ listings, reviews, slug, isOwnProfile, viewerWork
                         }
                         <span>Qty {listing.quantity}</span>
                       </div>
+                      {listing.discount_min_qty && listing.discount_pct && (
+                        <div className="mt-2">
+                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                            Buy {listing.discount_min_qty}+ · {listing.discount_pct}% off
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 )

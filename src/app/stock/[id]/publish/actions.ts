@@ -9,9 +9,12 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const pricePence = Math.round(parseFloat(formData.get('price') as string) * 100)
-  const finish   = (formData.get('finish') as string).trim()
-  const listQty  = parseInt(formData.get('list_qty') as string, 10)
+  const pricePence       = Math.round(parseFloat(formData.get('price') as string) * 100)
+  const finish           = (formData.get('finish') as string).trim()
+  const listQty          = parseInt(formData.get('list_qty') as string, 10)
+  const discountEnabled  = formData.get('discount_enabled') === '1'
+  const discountMinQty   = discountEnabled ? parseInt(formData.get('discount_min_qty') as string, 10) || null : null
+  const discountPct      = discountEnabled ? parseInt(formData.get('discount_pct')     as string, 10) || null : null
 
   // Fetch the stock item — RLS ensures this is the workshop's own item
   const { data: item } = await supabase
@@ -41,9 +44,11 @@ export async function publishToMarketplace(stockItemId: string, formData: FormDa
       length_mm:     lengthMm,
       width_mm:      widthMm,
       thickness_mm:  item.thickness_mm,
-      quantity:      Math.min(listQty, item.quantity),
-      price_pence:   pricePence,
-      description:   item.description,
+      quantity:          Math.min(listQty, item.quantity),
+      price_pence:       pricePence,
+      description:       item.description,
+      discount_min_qty:  discountMinQty,
+      discount_pct:      discountPct,
     })
     .select('id')
     .single()

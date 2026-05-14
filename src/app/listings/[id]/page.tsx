@@ -43,9 +43,11 @@ type ListingDetail = {
   width_mm: number
   thickness_mm: number
   quantity: number
-  price_pence: number
-  description: string | null
-  status: string
+  price_pence:      number
+  description:      string | null
+  status:           string
+  discount_min_qty: number | null
+  discount_pct:     number | null
   workshops: { name: string; slug: string; town: string | null; county: string | null }
   listing_images: { id: string; storage_path: string; position: number }[]
   stock_items: StockShape | null
@@ -320,6 +322,8 @@ export default async function ListingPage({
                 listingId={id}
                 maxQty={typedListing.quantity}
                 pricePence={typedListing.price_pence}
+                discountMinQty={typedListing.discount_min_qty ?? null}
+                discountPct={typedListing.discount_pct ?? null}
               />
             )}
           </div>

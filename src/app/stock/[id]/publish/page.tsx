@@ -7,6 +7,7 @@ import { formatDimensions } from '@/lib/format'
 import { FINISHES_BY_CATEGORY, type Category } from '@/lib/constants'
 import { publishToMarketplace } from './actions'
 import { SubmitButton } from '@/components/submit-button'
+import { DiscountFields } from '@/components/discount-fields'
 
 const inputClass = 'rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#3DBE72] focus:ring-2 focus:ring-[#3DBE72]/20'
 
@@ -127,6 +128,8 @@ export default async function PublishPage({
               Buyers can purchase any quantity up to your listed amount at this price per piece.
             </p>
           </div>
+
+          <DiscountFields />
 
           <div className="flex gap-3 pt-2">
             <SubmitButton

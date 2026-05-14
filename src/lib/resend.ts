@@ -19,6 +19,8 @@ export async function sendEnquiryEmail({
   material,
   finish,
   pricePence,
+  effectivePricePence,
+  discountPct,
   requestedQty,
   listingUrl,
 }: {
@@ -29,11 +31,17 @@ export async function sendEnquiryEmail({
   material: string
   finish: string
   pricePence: number
+  effectivePricePence?: number
+  discountPct?: number | null
   requestedQty: number
   listingUrl: string
 }) {
-  const perPiece    = (pricePence / 100).toFixed(2)
-  const totalPounds = ((pricePence * requestedQty) / 100).toFixed(2)
+  const effectivePrice  = effectivePricePence ?? pricePence
+  const discountApplied = !!(discountPct && effectivePricePence && effectivePricePence < pricePence)
+  const perPiece        = (pricePence / 100).toFixed(2)
+  const discountedPer   = (effectivePrice / 100).toFixed(2)
+  const totalPounds     = ((effectivePrice * requestedQty) / 100).toFixed(2)
+  const savedPounds     = discountApplied ? (((pricePence - effectivePrice) * requestedQty) / 100).toFixed(2) : null
 
   // Primary email → seller
   await resend.emails.send({
@@ -67,11 +75,15 @@ export async function sendEnquiryEmail({
               </tr>
               <tr>
                 <td style="color:#6b6b6a">Price per piece</td>
-                <td><strong>£${perPiece}</strong></td>
+                <td>
+                  ${discountApplied
+                    ? `<span style="text-decoration:line-through;color:#aaa">£${perPiece}</span> <strong style="color:#2A9E5A">£${discountedPer} (${discountPct}% bulk discount)</strong>`
+                    : `<strong>£${perPiece}</strong>`}
+                </td>
               </tr>
               <tr>
                 <td style="color:#6b6b6a">Total value</td>
-                <td><strong style="color:#2A9E5A;font-size:1rem">£${totalPounds}</strong></td>
+                <td><strong style="color:#2A9E5A;font-size:1rem">£${totalPounds}${savedPounds ? ` <span style="font-size:0.8rem;font-weight:normal">(saving £${savedPounds})</span>` : ''}</strong></td>
               </tr>
             </table>
           </div>

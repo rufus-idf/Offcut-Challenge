@@ -68,7 +68,7 @@ export default async function WorkshopProfilePage({
   const [{ data: listings }, { data: reviewRows }] = await Promise.all([
     supabase
       .from('listings')
-      .select('id, material, finish, category, length_mm, width_mm, thickness_mm, quantity, price_pence, listing_images(storage_path), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)')
+      .select('id, material, finish, category, length_mm, width_mm, thickness_mm, quantity, price_pence, discount_min_qty, discount_pct, listing_images(storage_path), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)')
       .eq('workshop_id', ws.id)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
