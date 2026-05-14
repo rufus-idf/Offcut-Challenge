@@ -66,28 +66,29 @@ export default async function SettingsPage({
     supabase.from('reviews').select('rating').eq('reviewed_workshop_id', workshop.id),
   ])
 
-  // Period-filtered activity
-  let stockInPeriodQuery = supabase
-    .from('stock_items').select('id').eq('workshop_id', workshop.id)
-  let listingsInPeriodQuery = supabase
-    .from('listings').select('id').eq('workshop_id', workshop.id)
-  let reviewsInPeriodQuery = supabase
-    .from('reviews').select('id').eq('reviewed_workshop_id', workshop.id)
-
-  if (fromDate) {
-    stockInPeriodQuery    = stockInPeriodQuery.gte('created_at', fromDate)
-    listingsInPeriodQuery = listingsInPeriodQuery.gte('created_at', fromDate)
-    reviewsInPeriodQuery  = reviewsInPeriodQuery.gte('created_at', fromDate)
-  }
+  // Period-filtered activity — count option must be on the initial .select()
+  const periodFilter = fromDate ?? '2000-01-01'
 
   const [
     { count: addedInPeriod },
     { count: publishedInPeriod },
     { count: reviewsInPeriod },
   ] = await Promise.all([
-    stockInPeriodQuery.select('id',    { count: 'exact', head: true }),
-    listingsInPeriodQuery.select('id', { count: 'exact', head: true }),
-    reviewsInPeriodQuery.select('id',  { count: 'exact', head: true }),
+    supabase
+      .from('stock_items')
+      .select('id', { count: 'exact', head: true })
+      .eq('workshop_id', workshop.id)
+      .gte('created_at', periodFilter),
+    supabase
+      .from('listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('workshop_id', workshop.id)
+      .gte('created_at', periodFilter),
+    supabase
+      .from('reviews')
+      .select('id', { count: 'exact', head: true })
+      .eq('reviewed_workshop_id', workshop.id)
+      .gte('created_at', periodFilter),
   ])
 
   // Compute stats
