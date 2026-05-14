@@ -157,8 +157,8 @@ export default async function SettingsPage({
           </div>
         )}
 
-        {/* Logo + website — narrow, form layout */}
-        <div className="max-w-2xl space-y-6">
+        {/* Logo + website — side by side */}
+        <div className="grid gap-6 lg:grid-cols-2">
 
           {/* Logo */}
           <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
@@ -204,7 +204,7 @@ export default async function SettingsPage({
             </form>
           </div>
 
-          {/* Website */}
+          {/* Website + public profile */}
           <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-base font-semibold text-stone-900">Website</h2>
             <form action={websiteAction} className="flex flex-col gap-4">
@@ -226,16 +226,22 @@ export default async function SettingsPage({
                 </SubmitButton>
               </div>
             </form>
+
+            {workshop.verification_status === 'approved' && (
+              <div className="mt-6 border-t border-stone-100 pt-5">
+                <p className="mb-1 text-sm font-medium text-stone-700">Public profile</p>
+                <a
+                  href={`/workshops/${workshop.slug}`}
+                  className="inline-flex items-center gap-1 text-sm text-[#2A9E5A] hover:underline"
+                >
+                  /workshops/{workshop.slug}
+                  <span className="text-xs">↗</span>
+                </a>
+                <p className="mt-1 text-xs text-stone-400">Visible to all verified workshops on the map and directory.</p>
+              </div>
+            )}
           </div>
 
-          {workshop.verification_status === 'approved' && (
-            <p className="text-center text-xs text-stone-400">
-              Your public profile:{' '}
-              <a href={`/workshops/${workshop.slug}`} className="text-[#2A9E5A] hover:underline">
-                /workshops/{workshop.slug}
-              </a>
-            </p>
-          )}
         </div>
 
         {/* Account Summary — full width */}
