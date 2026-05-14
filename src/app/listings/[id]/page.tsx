@@ -143,7 +143,7 @@ export default async function ListingPage({
         )}
 
         {/* eBay-style layout: thumbnails | main image | info */}
-        <div className="grid gap-6 lg:grid-cols-[80px_1fr_380px]">
+        <div className="grid gap-6 lg:grid-cols-[80px_520px_1fr]">
 
           {/* THUMBNAIL STRIP — desktop only */}
           <div className="hidden lg:flex flex-col gap-2">
@@ -191,7 +191,7 @@ export default async function ListingPage({
           {/* MAIN VISUAL — centre */}
           <div className="flex flex-col gap-4">
             {/* Main image or shape preview */}
-            <div className="relative aspect-[4/3] w-full max-w-[650px] overflow-hidden rounded-xl bg-stone-50">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-stone-50">
               {images.length > 0 ? (
                 <Image
                   src={getImageUrl(images[0].storage_path)}
