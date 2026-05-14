@@ -53,6 +53,18 @@ type ListingDetail = {
   stock_items: StockShape | null
 }
 
+type MoreItem = {
+  id: string
+  material: string
+  finish: string
+  price_pence: number
+  length_mm: number | null
+  width_mm: number | null
+  thickness_mm: number | null
+  listing_images: { storage_path: string; position: number }[]
+  stock_items: { shape_type: string; vertices_mm: number[][] | null; bbox_w_mm: number | null; bbox_h_mm: number | null } | null
+}
+
 export default async function ListingPage({
   params,
   searchParams,
@@ -82,17 +94,19 @@ export default async function ListingPage({
 
   if (!listing) notFound()
 
-  // Fetch more listings from the same workshop (excluding this one)
   const { data: moreRaw } = await supabase
     .from('listings')
-    .select('id, material, finish, price_pence, length_mm, width_mm, thickness_mm, listing_images(storage_path, position)')
+    .select('id, material, finish, price_pence, length_mm, width_mm, thickness_mm, listing_images(storage_path, position), stock_items(shape_type, vertices_mm, bbox_w_mm, bbox_h_mm)')
     .eq('workshop_id', listing.workshop_id)
     .eq('status', 'active')
     .neq('id', id)
     .order('created_at', { ascending: false })
-    .limit(4)
+    .limit(6)
 
-  const moreListings = moreRaw ?? []
+  const moreListings: MoreItem[] = (moreRaw ?? []).map((item: any) => ({
+    ...item,
+    stock_items: Array.isArray(item.stock_items) ? (item.stock_items[0] ?? null) : item.stock_items,
+  }))
 
   if (!profile?.workshop_id) redirect('/onboarding')
 
@@ -105,6 +119,7 @@ export default async function ListingPage({
     : typedListing.stock_items
 
   const uploadAction = uploadImage.bind(null, id)
+  const hasDiscount = !!(typedListing.discount_min_qty && typedListing.discount_pct)
 
   return (
     <div className="min-h-screen bg-[#FAF9F7]">
@@ -127,87 +142,98 @@ export default async function ListingPage({
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+        {/* Main grid — narrow visual left, wide info right */}
+        <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
 
-          {/* Photos */}
+          {/* LEFT: Visual column */}
           <div className="flex flex-col gap-4">
-            {images.length > 0 && (
-              <>
-                <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-stone-100">
-                  <Image
-                    src={getImageUrl(images[0].storage_path)}
-                    alt={`${typedListing.material} ${typedListing.finish}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 60vw"
-                    priority
-                  />
-                  {isOwner && (
-                    <form action={deleteImage.bind(null, images[0].id, id)} className="absolute right-2 top-2">
-                      <button
-                        type="submit"
-                        className="rounded-full bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/70"
-                      >
-                        Remove
-                      </button>
-                    </form>
-                  )}
-                </div>
-                {images.length > 1 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {images.slice(1).map(img => (
-                      <div key={img.id} className="relative aspect-square overflow-hidden rounded-lg bg-stone-100">
-                        <Image
-                          src={getImageUrl(img.storage_path)}
-                          alt=""
-                          fill
-                          className="object-cover"
-                          sizes="25vw"
-                        />
-                        {isOwner && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
-                            <form action={setImageAsCover.bind(null, img.id, id)}>
-                              <button type="submit" className="text-xs text-white font-semibold bg-white/20 rounded px-2 py-0.5 hover:bg-white/30">Set as cover</button>
-                            </form>
-                            <form action={deleteImage.bind(null, img.id, id)}>
-                              <button type="submit" className="text-xs text-white font-medium hover:underline">Remove</button>
-                            </form>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+
+            {/* Hero: photo if available, otherwise shape preview */}
+            {images.length > 0 ? (
+              <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-stone-100">
+                <Image
+                  src={getImageUrl(images[0].storage_path)}
+                  alt={`${typedListing.material} ${typedListing.finish}`}
+                  fill
+                  className="object-cover"
+                  sizes="300px"
+                  priority
+                />
+                {isOwner && (
+                  <form action={deleteImage.bind(null, images[0].id, id)} className="absolute right-2 top-2">
+                    <button type="submit" className="rounded-full bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/70">
+                      Remove
+                    </button>
+                  </form>
                 )}
-              </>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-stone-200 bg-stone-50">
+                <p className="px-4 pt-3 text-xs font-medium uppercase tracking-wide text-stone-400">
+                  Shape &amp; dimensions — click to enlarge
+                </p>
+                <div className="h-56 p-4">
+                  <ShapePreviewModal
+                    shapeType={shape?.shape_type ?? 'RECT'}
+                    verticesMm={shape?.vertices_mm ?? null}
+                    lengthMm={typedListing.length_mm}
+                    widthMm={typedListing.width_mm}
+                    thicknessMm={typedListing.thickness_mm}
+                    bboxWMm={shape?.bbox_w_mm ?? null}
+                    bboxHMm={shape?.bbox_h_mm ?? null}
+                    thumbnailShowLabels={true}
+                    thumbnailClassName="h-full w-full"
+                  />
+                </div>
+              </div>
             )}
 
-            {/* Shape diagram — always shown so buyers always know exact dimensions */}
-            <div className="rounded-xl border border-stone-200 bg-stone-50">
-              <p className="px-4 pt-3 text-xs font-medium uppercase tracking-wide text-stone-400">
-                Shape &amp; dimensions — click to enlarge
-              </p>
-              <div className="h-56 p-4">
-                <ShapePreviewModal
-                  shapeType={shape?.shape_type ?? 'RECT'}
-                  verticesMm={shape?.vertices_mm ?? null}
-                  lengthMm={typedListing.length_mm}
-                  widthMm={typedListing.width_mm}
-                  thicknessMm={typedListing.thickness_mm}
-                  bboxWMm={shape?.bbox_w_mm ?? null}
-                  bboxHMm={shape?.bbox_h_mm ?? null}
-                  thumbnailShowLabels={true}
-                  thumbnailClassName="h-full w-full"
-                />
+            {/* Thumbnail strip for additional photos */}
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {images.slice(1).map(img => (
+                  <div key={img.id} className="relative aspect-square overflow-hidden rounded-lg bg-stone-100">
+                    <Image src={getImageUrl(img.storage_path)} alt="" fill className="object-cover" sizes="75px" />
+                    {isOwner && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
+                        <form action={setImageAsCover.bind(null, img.id, id)}>
+                          <button type="submit" className="text-xs text-white font-semibold bg-white/20 rounded px-2 py-0.5 hover:bg-white/30">Cover</button>
+                        </form>
+                        <form action={deleteImage.bind(null, img.id, id)}>
+                          <button type="submit" className="text-xs text-white font-medium hover:underline">Remove</button>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
+
+            {/* Compact shape preview — shown below photos when photos exist */}
+            {images.length > 0 && (
+              <div className="rounded-xl border border-stone-200 bg-stone-50">
+                <p className="px-4 pt-3 text-xs font-medium uppercase tracking-wide text-stone-400">
+                  Shape &amp; dimensions — click to enlarge
+                </p>
+                <div className="h-40 p-4">
+                  <ShapePreviewModal
+                    shapeType={shape?.shape_type ?? 'RECT'}
+                    verticesMm={shape?.vertices_mm ?? null}
+                    lengthMm={typedListing.length_mm}
+                    widthMm={typedListing.width_mm}
+                    thicknessMm={typedListing.thickness_mm}
+                    bboxWMm={shape?.bbox_w_mm ?? null}
+                    bboxHMm={shape?.bbox_h_mm ?? null}
+                    thumbnailShowLabels={true}
+                    thumbnailClassName="h-full w-full"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Upload form — owner only */}
             {isOwner && (
-              <form
-                action={uploadAction}
-                encType="multipart/form-data"
-                className="rounded-xl border border-stone-200 bg-white p-4"
-              >
+              <form action={uploadAction} encType="multipart/form-data" className="rounded-xl border border-stone-200 bg-white p-4">
                 <p className="mb-1 text-sm font-medium text-stone-700">Add photos</p>
                 <p className="mb-3 text-xs text-stone-400">Select multiple files at once to upload them all in one go.</p>
                 <div className="flex gap-3">
@@ -231,63 +257,68 @@ export default async function ListingPage({
             )}
           </div>
 
-          {/* Listing info */}
+          {/* RIGHT: Info centrepiece */}
           <div className="flex flex-col gap-6">
             <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-start justify-between gap-4">
+
+              {/* Header — material, finish, price */}
+              <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-stone-900">{typedListing.material}</h1>
-                  <p className="text-stone-500">{typedListing.finish}</p>
+                  <h1 className="text-3xl font-bold text-stone-900">{typedListing.material}</h1>
+                  <p className="mt-1 text-stone-500">{typedListing.finish}</p>
                   {isOwner && (
-                    <Link href={`/listings/${id}/edit`} className="mt-1 inline-block text-xs text-[#2A9E5A] hover:underline">
+                    <Link href={`/listings/${id}/edit`} className="mt-2 inline-block text-xs text-[#2A9E5A] hover:underline">
                       Edit listing
                     </Link>
                   )}
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-[#2A9E5A]">{formatPrice(typedListing.price_pence)}</p>
+                <div className="text-right shrink-0">
+                  <p className="text-3xl font-bold text-[#2A9E5A]">{formatPrice(typedListing.price_pence)}</p>
                   <p className="text-xs text-stone-400">per piece</p>
                 </div>
               </div>
 
-              {/* Shape diagram */}
-              <div className="mb-4 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-stone-500">Shape</p>
-                  <span className="text-xs text-stone-400">
-                    {SHAPE_LABELS[shape?.shape_type ?? 'RECT'] ?? shape?.shape_type ?? 'Rectangle'}
+              {/* Discount badge */}
+              {hasDiscount && (
+                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm">
+                  <span className="text-amber-500">🏷</span>
+                  <span className="font-medium text-amber-800">
+                    Buy {typedListing.discount_min_qty}+ pieces — {typedListing.discount_pct}% off per piece
                   </span>
                 </div>
-                <div className="h-44 w-full rounded-lg border border-stone-100 bg-stone-50">
-                  <ShapePreviewModal
-                    shapeType={shape?.shape_type ?? 'RECT'}
-                    verticesMm={shape?.vertices_mm ?? null}
-                    lengthMm={typedListing.length_mm}
-                    widthMm={typedListing.width_mm}
-                    thicknessMm={typedListing.thickness_mm}
-                    bboxWMm={shape?.bbox_w_mm ?? null}
-                    bboxHMm={shape?.bbox_h_mm ?? null}
-                    thumbnailShowLabels={true}
-                  />
-                </div>
-              </div>
+              )}
 
+              {/* Details table */}
               <dl className="divide-y divide-stone-100 text-sm">
-                <div className="flex justify-between py-2.5">
+                <div className="flex justify-between py-3">
+                  <dt className="text-stone-500">Shape</dt>
+                  <dd className="font-medium text-stone-900">
+                    {SHAPE_LABELS[shape?.shape_type ?? 'RECT'] ?? shape?.shape_type ?? 'Rectangle'}
+                  </dd>
+                </div>
+                <div className="flex justify-between py-3">
                   <dt className="text-stone-500">Category</dt>
                   <dd className="font-medium text-stone-900">{typedListing.category}</dd>
                 </div>
-                <div className="flex justify-between py-2.5">
+                <div className="flex justify-between py-3">
                   <dt className="text-stone-500">Dimensions</dt>
                   <dd className="font-medium text-stone-900">
                     {formatDimensions(typedListing.length_mm, typedListing.width_mm, typedListing.thickness_mm)}
                   </dd>
                 </div>
-                <div className="flex justify-between py-2.5">
+                <div className="flex justify-between py-3">
                   <dt className="text-stone-500">Quantity available</dt>
                   <dd className="font-medium text-stone-900">{typedListing.quantity}</dd>
                 </div>
-                <div className="flex justify-between py-2.5">
+                {hasDiscount && (
+                  <div className="flex justify-between py-3">
+                    <dt className="text-stone-500">Bulk discount</dt>
+                    <dd className="font-medium text-amber-700">
+                      {typedListing.discount_pct}% off when buying {typedListing.discount_min_qty}+
+                    </dd>
+                  </div>
+                )}
+                <div className="flex justify-between py-3">
                   <dt className="text-stone-500">Sold by</dt>
                   <dd className="font-medium text-stone-900">
                     <Link href={`/workshops/${typedListing.workshops.slug}`} className="hover:text-[#2A9E5A] hover:underline">
@@ -296,7 +327,7 @@ export default async function ListingPage({
                   </dd>
                 </div>
                 {typedListing.workshops.town && (
-                  <div className="flex justify-between py-2.5">
+                  <div className="flex justify-between py-3">
                     <dt className="text-stone-500">Ships from</dt>
                     <dd className="font-medium text-stone-900">
                       {[typedListing.workshops.town, typedListing.workshops.county].filter(Boolean).join(', ')}
@@ -306,13 +337,14 @@ export default async function ListingPage({
               </dl>
 
               {typedListing.description && (
-                <div className="mt-4 border-t border-stone-100 pt-4">
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-stone-400">Description</p>
-                  <p className="text-sm text-stone-700">{typedListing.description}</p>
+                <div className="mt-5 border-t border-stone-100 pt-5">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Description</p>
+                  <p className="text-sm leading-relaxed text-stone-700">{typedListing.description}</p>
                 </div>
               )}
             </div>
 
+            {/* Enquiry widget or owner note */}
             {isOwner ? (
               <div className="rounded-xl border border-stone-100 bg-stone-50 p-4 text-center">
                 <p className="text-sm text-stone-400">This is your listing</p>
@@ -330,48 +362,55 @@ export default async function ListingPage({
 
         </div>
 
-        {/* More from this workshop */}
+        {/* More from this workshop — compact */}
         {moreListings.length > 0 && (
           <div className="mt-12">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-stone-900">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
                 More from {typedListing.workshops.name}
               </h2>
-              <Link
-                href={`/workshops/${typedListing.workshops.slug}`}
-                className="text-sm text-[#2A9E5A] hover:underline"
-              >
+              <Link href={`/workshops/${typedListing.workshops.slug}`} className="text-sm text-[#2A9E5A] hover:underline">
                 View all →
               </Link>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {moreListings.map((item: any) => {
-                const imgs = [...(item.listing_images ?? [])].sort((a: any, b: any) => a.position - b.position)
+            <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
+              {moreListings.map(item => {
+                const imgs = [...(item.listing_images ?? [])].sort((a, b) => a.position - b.position)
+                const itemStock = item.stock_items
                 return (
                   <Link
                     key={item.id}
                     href={`/listings/${item.id}`}
                     className="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md"
                   >
-                    <div className="relative aspect-[4/3] bg-stone-100">
+                    <div className="relative aspect-square bg-stone-50">
                       {imgs[0] ? (
                         <Image
                           src={getImageUrl(imgs[0].storage_path)}
                           alt={`${item.material} ${item.finish}`}
                           fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                          sizes="25vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center">
-                          <p className="text-xs text-stone-400">{item.material}</p>
+                        <div className="flex h-full items-center justify-center p-3">
+                          <ShapePreviewModal
+                            shapeType={itemStock?.shape_type ?? 'RECT'}
+                            verticesMm={itemStock?.vertices_mm ?? null}
+                            lengthMm={item.length_mm}
+                            widthMm={item.width_mm}
+                            thicknessMm={item.thickness_mm ?? 0}
+                            bboxWMm={itemStock?.bbox_w_mm ?? null}
+                            bboxHMm={itemStock?.bbox_h_mm ?? null}
+                            thumbnailShowLabels={false}
+                            thumbnailClassName="h-full w-full"
+                          />
                         </div>
                       )}
                     </div>
-                    <div className="p-3">
-                      <p className="font-semibold text-stone-900 group-hover:text-[#2A9E5A] transition-colors">{item.material}</p>
-                      <p className="text-xs text-stone-500">{item.finish}</p>
-                      <p className="mt-1 font-bold text-[#2A9E5A]">{formatPrice(item.price_pence)}</p>
+                    <div className="p-2.5">
+                      <p className="truncate text-xs font-semibold text-stone-900 group-hover:text-[#2A9E5A] transition-colors">{item.material}</p>
+                      <p className="text-xs font-bold text-[#2A9E5A]">{formatPrice(item.price_pence)}</p>
                     </div>
                   </Link>
                 )
