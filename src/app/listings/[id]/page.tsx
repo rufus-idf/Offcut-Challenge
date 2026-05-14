@@ -143,7 +143,7 @@ export default async function ListingPage({
         )}
 
         {/* eBay-style layout: thumbnails | main image | info */}
-        <div className="grid gap-6 lg:grid-cols-[80px_520px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[80px_1fr_1fr]">
 
           {/* THUMBNAIL STRIP — desktop only */}
           <div className="hidden lg:flex flex-col gap-2">
