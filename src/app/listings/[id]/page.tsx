@@ -191,7 +191,7 @@ export default async function ListingPage({
           {/* MAIN VISUAL — centre */}
           <div className="flex flex-col gap-4">
             {/* Main image or shape preview */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-stone-50">
+            <div className="relative aspect-[4/3] w-full max-w-[700px] overflow-hidden rounded-xl bg-stone-50">
               {images.length > 0 ? (
                 <Image
                   src={getImageUrl(images[0].storage_path)}
