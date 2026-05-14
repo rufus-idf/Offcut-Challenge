@@ -47,6 +47,8 @@ export type Listing = {
   thickness_mm: number
   quantity: number
   price_pence: number
+  discount_min_qty: number | null
+  discount_pct: number | null
   description: string | null
   status: 'active' | 'sold' | 'archived'
   created_at: string
