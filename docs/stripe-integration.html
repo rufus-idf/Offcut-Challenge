@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offcut Challenge — Stripe Integration Plan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #FAF9F7;
+    color: #1C1C1E;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: #1C1C1E;
+    padding: 28px 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .site-header .logo { font-size: 1.4rem; font-weight: 800; }
+  .site-header .logo span { color: #3DBE72; }
+  .site-header .subtitle { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+  .site-header .badge {
+    margin-left: auto;
+    background: #3DBE72;
+    color: white;
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 48px 32px; }
+
+  .toc {
+    background: white;
+    border: 1px solid #e5e5e0;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 48px;
+  }
+  .toc h2 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #999; margin-bottom: 16px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: #2A9E5A; text-decoration: none; font-size: 0.9rem; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── Sections ── */
+  .section { margin-bottom: 64px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e5e5e0;
+  }
+  .section-num {
+    width: 36px; height: 36px;
+    background: #1C1C1E;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.4rem; font-weight: 700; }
+  .section-header .tag {
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 50px;
+    background: #E8F7EE;
+    color: #2A9E5A;
+  }
+  .section-header .tag.amber { background: #FFF8E6; color: #B45309; }
+  .section-header .tag.blue { background: #EFF6FF; color: #1D4ED8; }
+  .section-header .tag.red { background: #FEF2F2; color: #B91C1C; }
+
+  /* ── Cards ── */
+  .card {
+    background: white;
+    border: 1px solid #e5e5e0;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+  .card p { font-size: 0.88rem; color: #555; margin-bottom: 8px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .card-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    font-size: 0.86rem;
+  }
+  .callout.green { background: #E8F7EE; border-left: 4px solid #3DBE72; color: #1C5030; }
+  .callout.amber { background: #FFF8E6; border-left: 4px solid #F59E0B; color: #78350F; }
+  .callout.blue  { background: #EFF6FF; border-left: 4px solid #3B82F6; color: #1E3A5F; }
+  .callout.red   { background: #FEF2F2; border-left: 4px solid #EF4444; color: #7F1D1D; }
+  .callout.dark  { background: #1C1C1E; border-left: 4px solid #3DBE72; color: #e0e0e0; }
+  .callout strong { display: block; margin-bottom: 4px; }
+
+  /* ── Flowcharts ── */
+  .flow-wrap {
+    background: white;
+    border: 1px solid #e5e5e0;
+    border-radius: 14px;
+    padding: 32px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .flow-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 24px;
+  }
+
+  /* Vertical flow */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .flow-row { display: flex; align-items: flex-start; justify-content: center; gap: 0; }
+
+  .box {
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 180px;
+    max-width: 240px;
+    line-height: 1.4;
+  }
+  .box.start   { background: #1C1C1E; color: white; border-radius: 50px; }
+  .box.end     { background: #3DBE72; color: white; border-radius: 50px; }
+  .box.action  { background: #EFF6FF; color: #1D4ED8; border: 2px solid #BFDBFE; }
+  .box.stripe  { background: #F0F0FF; color: #5850EC; border: 2px solid #C7D2FE; }
+  .box.db      { background: #F0FDF4; color: #166534; border: 2px solid #BBF7D0; }
+  .box.email   { background: #FFF7ED; color: #C2410C; border: 2px solid #FED7AA; }
+  .box.warn    { background: #FFF8E6; color: #B45309; border: 2px solid #FDE68A; }
+  .box.reject  { background: #FEF2F2; color: #B91C1C; border: 2px solid #FECACA; }
+  .box.decide  {
+    background: #FEFCE8; color: #713F12; border: 2px solid #FEF08A;
+    transform: rotate(45deg);
+    width: 120px; height: 120px;
+    min-width: unset; max-width: unset;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px;
+  }
+  .box.decide span { transform: rotate(-45deg); display: block; font-size: 0.78rem; }
+
+  .arrow {
+    width: 2px;
+    height: 24px;
+    background: #ccc;
+    position: relative;
+    margin: 0 auto;
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: -5px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #ccc;
+  }
+
+  .arrow-h {
+    height: 2px;
+    width: 40px;
+    background: #ccc;
+    position: relative;
+    align-self: center;
+    flex-shrink: 0;
+  }
+  .arrow-h::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: -5px;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 8px solid #ccc;
+  }
+
+  .arrow-label {
+    font-size: 0.7rem;
+    color: #999;
+    text-align: center;
+    margin: 2px 0;
+  }
+
+  /* Branch layout */
+  .branch { display: flex; gap: 40px; align-items: flex-start; justify-content: center; margin: 8px 0; }
+  .branch-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .branch-label { font-size: 0.7rem; font-weight: 600; color: #999; margin-bottom: 6px; text-align: center; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-bottom: 16px; }
+  th {
+    background: #1C1C1E;
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid #f0f0ee; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #faf9f7; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; color: #5850EC; }
+  .type-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .type-text    { background: #EFF6FF; color: #1D4ED8; }
+  .type-uuid    { background: #F0F0FF; color: #5850EC; }
+  .type-int     { background: #F0FDF4; color: #166534; }
+  .type-ts      { background: #FFF7ED; color: #C2410C; }
+  .type-bool    { background: #FEF9C3; color: #713F12; }
+
+  /* ── Steps ── */
+  .steps { list-style: none; }
+  .steps li {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    background: #3DBE72;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-body h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .step-body p { font-size: 0.84rem; color: #666; }
+  .step-body code {
+    background: #f0f0ee;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.78rem;
+    color: #5850EC;
+  }
+
+  /* ── Stripe connect diagram ── */
+  .money-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 24px 0;
+  }
+  .money-node {
+    text-align: center;
+    padding: 16px 20px;
+    border-radius: 12px;
+    min-width: 130px;
+  }
+  .money-node.buyer  { background: #EFF6FF; border: 2px solid #BFDBFE; }
+  .money-node.plat   { background: #1C1C1E; color: white; }
+  .money-node.seller { background: #E8F7EE; border: 2px solid #BBF7D0; }
+  .money-node .amount { font-size: 1.4rem; font-weight: 800; }
+  .money-node .label { font-size: 0.74rem; color: inherit; opacity: 0.7; margin-top: 2px; }
+  .money-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    padding: 0 8px;
+  }
+  .money-arrow .line { height: 2px; background: #3DBE72; width: 100%; }
+  .money-arrow .tip { font-size: 0.72rem; color: #3DBE72; font-weight: 600; margin-top: 4px; text-align: center; }
+  .money-arrow .arrowhead { color: #3DBE72; font-size: 1rem; }
+
+  /* ── Tier comparison ── */
+  .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .tier-card {
+    border-radius: 14px;
+    padding: 24px;
+    border: 2px solid transparent;
+  }
+  .tier-card.free { background: #E8F7EE; border-color: #3DBE72; }
+  .tier-card.paid { background: #1C1C1E; color: white; }
+  .tier-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .tier-card .price { font-size: 1.8rem; font-weight: 800; margin-bottom: 12px; }
+  .tier-card .price span { font-size: 0.8rem; font-weight: 400; opacity: 0.6; }
+  .tier-card ul { list-style: none; }
+  .tier-card ul li { font-size: 0.84rem; padding: 4px 0; }
+  .tier-card ul li::before { content: '✓ '; color: #3DBE72; font-weight: 700; }
+  .tier-card.paid ul li::before { color: #3DBE72; }
+  .tier-label {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .tier-label.free-tag { background: #3DBE72; color: white; }
+  .tier-label.paid-tag { background: rgba(255,255,255,0.15); color: white; }
+
+  /* ── Webhook table ── */
+  .webhook-event {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0ee;
+  }
+  .webhook-event:last-child { border-bottom: none; }
+  .event-name {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.78rem;
+    color: #5850EC;
+    background: #F0F0FF;
+    padding: 3px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 300px;
+  }
+  .event-desc { font-size: 0.84rem; color: #555; }
+  .event-action { font-size: 0.78rem; color: #2A9E5A; font-weight: 600; margin-top: 3px; }
+
+  /* Roadmap */
+  .roadmap { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .roadmap-item {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    background: white;
+    border: 1px solid #e5e5e0;
+    border-radius: 10px;
+    padding: 14px 20px;
+  }
+  .roadmap-phase {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #999;
+  }
+  .roadmap-task { font-size: 0.88rem; font-weight: 600; }
+  .roadmap-task p { font-size: 0.78rem; color: #888; font-weight: 400; margin-top: 2px; }
+  .roadmap-effort {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+  .effort-s { background: #E8F7EE; color: #2A9E5A; }
+  .effort-m { background: #FFF8E6; color: #B45309; }
+  .effort-l { background: #FEF2F2; color: #B91C1C; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px;
+    font-size: 0.78rem;
+    color: #bbb;
+    border-top: 1px solid #e5e5e0;
+    margin-top: 64px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Offcut<span>Challenge</span></div>
+  <div class="subtitle">Stripe Integration Specification</div>
+  <div class="badge">Phase 3 — Payments</div>
+</header>
+
+<div class="container">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#stripe-products">Stripe products needed</a></li>
+      <li><a href="#pricing-tiers">Pricing tiers — free vs paid</a></li>
+      <li><a href="#money-flow">How the 5% fee works (Connect)</a></li>
+      <li><a href="#seller-onboarding">Flow 1 — Seller Stripe onboarding</a></li>
+      <li><a href="#subscription">Flow 2 — Subscription for new workshops</a></li>
+      <li><a href="#direct-purchase">Flow 3 — Direct purchase (Buy now)</a></li>
+      <li><a href="#offers">Flow 4 — Offers &amp; counter-offers</a></li>
+      <li><a href="#webhooks">Webhook events to handle</a></li>
+      <li><a href="#database">Database changes required</a></li>
+      <li><a href="#env-vars">Environment variables</a></li>
+      <li><a href="#roadmap">Implementation roadmap</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 1. STRIPE PRODUCTS -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="stripe-products">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Stripe products needed</h2>
+      <div class="tag blue">Setup first</div>
+    </div>
+
+    <div class="callout green">
+      <strong>One Stripe account covers everything.</strong>
+      The account is registered under your business domain <strong>offcutchallenge.co.uk</strong> — this is purely your business identity for Stripe's compliance review. It has no technical effect on where payments flow or where webhooks point. The marketplace app (Vercel), the public storefront, and future products like the camera app all operate through the same account using the same API keys.
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <h3>Account architecture</h3>
+      <pre style="background:#1C1C1E;color:#e0e0e0;padding:20px;border-radius:10px;font-size:0.8rem;line-height:1.8;">
+Stripe Account  (business: offcutchallenge.co.uk)
+│
+├── Products
+│     ├── Offcut Challenge Membership  — £29/month subscription
+│     └── Camera App                  — one-off purchase (future)
+│
+├── Stripe Connect  — marketplace seller accounts (Express)
+│     └── Each workshop seller gets their own Express sub-account
+│
+└── Webhook endpoints  (multiple allowed)
+      ├── https://offcut-challenge.vercel.app/api/webhooks/stripe
+      │     └── handles: subscriptions, marketplace payments, Connect events
+      └── https://offcutchallenge.co.uk/api/webhooks/stripe  (future)
+            └── handles: camera app purchases</pre>
+    </div>
+
+    <div class="card-grid three">
+      <div class="card">
+        <h3>🔗 Stripe Connect</h3>
+        <p>The core of the marketplace. Allows buyer payments to flow through Offcut Challenge (platform) and out to sellers, with the 5% fee taken automatically.</p>
+        <p><strong>Account type:</strong> Express — minimal friction for sellers. Stripe handles KYC and bank details. Sellers get a Stripe Express dashboard.</p>
+        <p><strong>Charge type:</strong> Destination charges — the payment appears on the Offcut Challenge platform account, with a transfer to the seller.</p>
+      </div>
+      <div class="card">
+        <h3>💳 Stripe Billing</h3>
+        <p>Handles the £29/month subscription for workshops 31 and onwards. Legacy workshops (first 30) are flagged in the database and never hit this flow.</p>
+        <p><strong>Product:</strong> One product — "Offcut Challenge Membership" with one recurring price of £29/month.</p>
+        <p><strong>Gate:</strong> The app checks subscription status on protected routes.</p>
+      </div>
+      <div class="card">
+        <h3>⚡ Stripe Webhooks</h3>
+        <p>How Stripe tells your app that something happened — payment succeeded, subscription cancelled, seller account approved, etc.</p>
+        <p>Two webhook endpoints registered in the same account — one for the Vercel app, one for the offcutchallenge.co.uk storefront when it's built.</p>
+        <p><strong>Verification:</strong> Every event must be verified using the webhook signing secret before being acted on. Each endpoint has its own unique signing secret.</p>
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <strong>Before writing any code:</strong>
+      Register a Stripe account at stripe.com using <strong>offcutchallenge.co.uk</strong> as your business website, then apply for Connect platform access (Stripe → Settings → Connect). This can take 1–3 business days to be approved. Do this first — everything else is blocked on it.
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 2. PRICING TIERS -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="pricing-tiers">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Pricing tiers — free vs paid</h2>
+      <div class="tag green">Business rules</div>
+    </div>
+
+    <div class="tier-grid">
+      <div class="tier-card free">
+        <div class="tier-label free-tag">Legacy Free — workshops 1–30</div>
+        <div class="price">£0 <span>/ month</span></div>
+        <ul>
+          <li>Full marketplace access</li>
+          <li>Unlimited stock items</li>
+          <li>Unlimited listings</li>
+          <li>5% transaction fee on sales</li>
+          <li>Must still connect Stripe to sell</li>
+          <li>Grandfathered forever</li>
+        </ul>
+      </div>
+      <div class="tier-card paid">
+        <div class="tier-label paid-tag">Paid — workshops 31+</div>
+        <div class="price">£29 <span>/ month</span></div>
+        <ul>
+          <li>Full marketplace access</li>
+          <li>Unlimited stock items</li>
+          <li>Unlimited listings</li>
+          <li>5% transaction fee on sales</li>
+          <li>Must still connect Stripe to sell</li>
+          <li>Cancel any time</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How to track this in the database</h3>
+      <p>Add a <span class="mono">subscription_status</span> column to the <span class="mono">workshops</span> table with these possible values:</p>
+      <table>
+        <tr>
+          <th>Status value</th>
+          <th>Meaning</th>
+          <th>Has access?</th>
+        </tr>
+        <tr><td class="mono">legacy_free</td><td>Workshop 1–30 — set at signup, never changes</td><td>✅ Always</td></tr>
+        <tr><td class="mono">active</td><td>Subscription paid and current</td><td>✅ Yes</td></tr>
+        <tr><td class="mono">trialing</td><td>In a free trial period (optional, can offer 14-day trial)</td><td>✅ Yes</td></tr>
+        <tr><td class="mono">past_due</td><td>Payment failed — Stripe is retrying</td><td>⚠️ Grace period (7 days)</td></tr>
+        <tr><td class="mono">cancelled</td><td>Subscription ended</td><td>❌ No — redirect to /subscribe</td></tr>
+        <tr><td class="mono">unpaid</td><td>All Stripe retries exhausted</td><td>❌ No — redirect to /subscribe</td></tr>
+      </table>
+    </div>
+
+    <div class="callout green">
+      <strong>Determining legacy vs paid at signup:</strong>
+      When a workshop is created, count the total number of approved workshops. If the count after this one is ≤ 30, set <span class="mono">subscription_status = 'legacy_free'</span>. Otherwise, trigger the subscription checkout flow.
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 3. MONEY FLOW -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="money-flow">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>How the 5% fee works</h2>
+      <div class="tag">Stripe Connect</div>
+    </div>
+
+    <div class="card">
+      <h3>Destination charge — example £100 sale</h3>
+
+      <div class="money-flow">
+        <div class="money-node buyer">
+          <div class="amount">£100</div>
+          <div class="label">Buyer pays</div>
+        </div>
+        <div class="money-arrow">
+          <div class="line"></div>
+          <div class="arrowhead">→</div>
+          <div class="tip">Payment Intent</div>
+        </div>
+        <div class="money-node plat">
+          <div class="amount">£5.00</div>
+          <div class="label">Platform keeps (5%)<br><small style="opacity:0.5">minus Stripe fees ~£1.74</small></div>
+        </div>
+        <div class="money-arrow">
+          <div class="line"></div>
+          <div class="arrowhead">→</div>
+          <div class="tip">Auto transfer</div>
+        </div>
+        <div class="money-node seller">
+          <div class="amount">£95.00</div>
+          <div class="label">Seller receives (95%)</div>
+        </div>
+      </div>
+
+      <div class="callout blue">
+        <strong>How this works in the Stripe API:</strong>
+        When creating a PaymentIntent, set <span class="mono">application_fee_amount</span> to 5% of the total (in pence) and <span class="mono">transfer_data.destination</span> to the seller's Stripe Connect account ID. Stripe handles the split automatically.
+      </div>
+
+      <p style="font-size:0.84rem;color:#666;margin-top:8px;">
+        <strong>Stripe's own fees</strong> (typically 1.4% + 20p for UK cards, or 2.9% + 30p for international) come out of the <em>platform's</em> application fee share — not the seller's. If Stripe's fee on a £100 sale is ~£1.60, your net is ~£3.40 on that transaction. Factor this into your pricing model as you grow.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>PaymentIntent creation (simplified)</h3>
+      <pre style="background:#1C1C1E;color:#e0e0e0;padding:20px;border-radius:10px;font-size:0.8rem;overflow-x:auto;line-height:1.6;">
+// Server Action: createPurchaseIntent(listingId, quantity)
+const feeAmount = Math.round(totalPence * 0.05)  <span style="color:#3DBE72">// 5%</span>
+
+const paymentIntent = await stripe.paymentIntents.create({
+  amount:                  totalPence,
+  currency:                <span style="color:#F59E0B">'gbp'</span>,
+  application_fee_amount:  feeAmount,             <span style="color:#3DBE72">// platform takes this</span>
+  transfer_data: {
+    destination:           seller.stripe_account_id,  <span style="color:#3DBE72">// seller's Connect account</span>
+  },
+  metadata: {
+    listing_id:  listing.id,
+    order_qty:   quantity,
+    buyer_id:    buyerWorkshopId,
+    seller_id:   sellerWorkshopId,
+  }
+})</pre>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 4. SELLER ONBOARDING FLOW -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="seller-onboarding">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Flow 1 — Seller Stripe onboarding</h2>
+      <div class="tag">Connect Express</div>
+    </div>
+
+    <div class="callout blue">
+      <strong>When this is needed:</strong>
+      Every workshop that wants to <em>sell</em> must connect a Stripe Express account. This gives Stripe the bank details and identity info needed to send them money. Buyers don't need this — only sellers do.
+    </div>
+
+    <div class="flow-wrap">
+      <div class="flow-title">Seller onboarding — end to end</div>
+      <div class="flow">
+
+        <div class="box start">Workshop approved by admin</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Dashboard shows "Connect Stripe to start selling" banner</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Workshop owner clicks "Connect Stripe"</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Server Action: create Stripe Express account<br><small style="font-weight:400">stripe.accounts.create({ type: 'express', country: 'GB', email: ... })</small></div>
+        <div class="arrow"></div>
+
+        <div class="box db">Save stripe_account_id to workshops table</div>
+        <div class="arrow"></div>
+
+        <div class="box stripe">Generate Stripe Account Link<br><small style="font-weight:400">stripe.accountLinks.create({ type: 'account_onboarding', return_url, refresh_url })</small></div>
+        <div class="arrow"></div>
+
+        <div class="box stripe">Redirect to Stripe-hosted onboarding page<br><small style="font-weight:400">Stripe collects: name, DOB, address, bank account, business info</small></div>
+        <div class="arrow"></div>
+
+        <div class="box action">Workshop redirected back to /settings?stripe=connected</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Check account status via API<br><small style="font-weight:400">stripe.accounts.retrieve(accountId) — check charges_enabled</small></div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label">charges_enabled: true</div>
+            <div class="box db">Set stripe_onboarding_complete = true</div>
+            <div class="arrow"></div>
+            <div class="box end">Workshop can receive payments ✓</div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label">charges_enabled: false</div>
+            <div class="box warn">Onboarding incomplete<br><small>Show "Finish setting up Stripe" link</small></div>
+            <div class="arrow"></div>
+            <div class="box stripe">Regenerate account link<br><small>stripe.accountLinks.create()</small></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <strong>Important — incomplete onboarding:</strong>
+      Stripe allows sellers to start onboarding and leave midway. The <span class="mono">account.updated</span> webhook fires when they eventually complete it. Listen for this event and set <span class="mono">stripe_onboarding_complete = true</span> when <span class="mono">charges_enabled</span> becomes <span class="mono">true</span>.
+    </div>
+
+    <div class="card">
+      <h3>What to show in the Settings page</h3>
+      <table>
+        <tr><th>State</th><th>UI shown</th></tr>
+        <tr><td>No Stripe account linked</td><td>Green "Connect Stripe to start selling" banner with button</td></tr>
+        <tr><td>Account linked but incomplete</td><td>Amber "Finish Stripe setup" banner with "Resume" link</td></tr>
+        <tr><td>Fully connected</td><td>Green "Payments connected ✓" with link to Stripe Express dashboard</td></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 5. SUBSCRIPTION FLOW -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="subscription">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Flow 2 — Subscription for new workshops</h2>
+      <div class="tag amber">Workshops 31+</div>
+    </div>
+
+    <div class="flow-wrap">
+      <div class="flow-title">Signup → subscription gate</div>
+      <div class="flow">
+
+        <div class="box start">New user signs up &amp; creates workshop</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Count total approved workshops in DB</div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label">Count ≤ 30</div>
+            <div class="box db">Set subscription_status<br>= 'legacy_free'</div>
+            <div class="arrow"></div>
+            <div class="box end">Full access — no payment needed</div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label">Count &gt; 30</div>
+            <div class="box action">Redirect to /subscribe page</div>
+            <div class="arrow"></div>
+            <div class="box stripe">Create Stripe Customer<br><small>stripe.customers.create({ email, metadata: { workshop_id } })</small></div>
+            <div class="arrow"></div>
+            <div class="box db">Save stripe_customer_id to workshops</div>
+            <div class="arrow"></div>
+            <div class="box stripe">Create Stripe Checkout Session<br><small>mode: 'subscription', price: PRICE_ID (£29/mo)</small></div>
+            <div class="arrow"></div>
+            <div class="box stripe">Redirect to Stripe-hosted checkout</div>
+            <div class="arrow"></div>
+            <div class="box stripe">Webhook fires: customer.subscription.created</div>
+            <div class="arrow"></div>
+            <div class="box db">Set subscription_status = 'active'<br>Save stripe_subscription_id</div>
+            <div class="arrow"></div>
+            <div class="box end">Full access granted</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Subscription gate — where to check</h3>
+      <p>Add a helper function <span class="mono">requiresActiveSubscription(workshop)</span> and call it in any server component or action that touches marketplace features. It returns <span class="mono">true</span> if the workshop has <span class="mono">legacy_free</span>, <span class="mono">active</span>, or <span class="mono">trialing</span> status.</p>
+      <table>
+        <tr><th>Route</th><th>Subscription check needed?</th></tr>
+        <tr><td class="mono">/listings</td><td>Yes — browse requires active subscription</td></tr>
+        <tr><td class="mono">/listings/new</td><td>Yes — creating listings requires active subscription</td></tr>
+        <tr><td class="mono">/dashboard</td><td>Yes — stock management requires active subscription</td></tr>
+        <tr><td class="mono">/settings</td><td>No — always accessible (needed to subscribe)</td></tr>
+        <tr><td class="mono">/verification</td><td>No — verification must happen before subscription</td></tr>
+        <tr><td class="mono">/subscribe</td><td>No — this is the payment page itself</td></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 6. DIRECT PURCHASE FLOW -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="direct-purchase">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Flow 3 — Direct purchase (Buy now)</h2>
+      <div class="tag">Payment Intents</div>
+    </div>
+
+    <div class="flow-wrap">
+      <div class="flow-title">Buyer purchases a listing outright</div>
+      <div class="flow">
+
+        <div class="box start">Buyer views listing detail page</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Buyer selects quantity, clicks "Buy now"</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Server checks seller has charges_enabled<br>(stripe_onboarding_complete = true)</div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label">Seller not set up</div>
+            <div class="box warn">Show message:<br>"Seller hasn't connected payments yet.<br>Use the enquiry form."</div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label">Seller ready</div>
+            <div class="box action">Server Action: createPurchaseIntent()<br><small>Calculate total: price × qty</small></div>
+            <div class="arrow"></div>
+            <div class="box stripe">Create PaymentIntent with<br>application_fee_amount (5%)<br>transfer_data.destination = seller account</div>
+            <div class="arrow"></div>
+            <div class="box db">Create pending order record<br><small>status: 'payment_pending'</small></div>
+            <div class="arrow"></div>
+            <div class="box stripe">Redirect to Stripe Checkout Session<br><small>or embed Stripe Elements on the page</small></div>
+            <div class="arrow"></div>
+            <div class="box stripe">Buyer completes payment<br><small>Card details entered on Stripe-hosted page</small></div>
+            <div class="arrow"></div>
+            <div class="box stripe">Webhook: payment_intent.succeeded</div>
+            <div class="arrow"></div>
+            <div class="box db">Update order → status: 'paid'<br>Reduce listing quantity<br>If qty = 0: listing status → 'sold'<br>stock_item status → 'sold'</div>
+            <div class="arrow"></div>
+            <div class="box email">Email seller: "You have a new sale!"<br>Email buyer: "Your order is confirmed"</div>
+            <div class="arrow"></div>
+            <div class="box end">Order complete — buyer redirected to /orders/[id]</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="callout red">
+      <strong>Never mark an order as paid until the webhook fires.</strong>
+      The Stripe Checkout success page redirect is not reliable — users can close their browser or lose connection. The <span class="mono">payment_intent.succeeded</span> webhook is the only authoritative confirmation. Always gate fulfilment on the webhook, not the redirect.
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 7. OFFERS & COUNTER-OFFERS -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="offers">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>Flow 4 — Offers &amp; counter-offers</h2>
+      <div class="tag amber">Negotiation</div>
+    </div>
+
+    <div class="callout blue">
+      <strong>Overview:</strong>
+      Any buyer can submit an offer below the listed price. The seller can accept (triggers payment at the offered price), counter with a different price, or decline. Offers expire after 48 hours if not responded to. Only one active offer per listing per buyer at a time.
+    </div>
+
+    <div class="flow-wrap">
+      <div class="flow-title">Offer flow — buyer submits, seller responds</div>
+      <div class="flow">
+
+        <div class="box start">Buyer clicks "Make an offer" on listing</div>
+        <div class="arrow"></div>
+
+        <div class="box action">Buyer enters offer price (must be below list price)<br>Optionally: message with the offer</div>
+        <div class="arrow"></div>
+
+        <div class="box db">Create offer record<br><small>status: 'pending', expires_at: now + 48h</small></div>
+        <div class="arrow"></div>
+
+        <div class="box email">Email seller: "New offer received"<br><small>Shows: offered price, quantity, buyer workshop, link to dashboard</small></div>
+        <div class="arrow"></div>
+
+        <div class="box action">Seller sees offer in their dashboard<br>under Listings → Active Offers</div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+
+          <div class="branch-col">
+            <div class="branch-label">Seller: Accept</div>
+            <div class="box db">offer status → 'accepted'</div>
+            <div class="arrow"></div>
+            <div class="box stripe">Create PaymentIntent<br>at offered price<br>(5% fee still applies)</div>
+            <div class="arrow"></div>
+            <div class="box email">Email buyer:<br>"Offer accepted — pay now"</div>
+            <div class="arrow"></div>
+            <div class="box action">Buyer sees "Pay now" button<br>in their dashboard</div>
+            <div class="arrow"></div>
+            <div class="box action">Buyer completes payment<br>(same as Buy now flow)</div>
+            <div class="arrow"></div>
+            <div class="box end">Order created ✓</div>
+          </div>
+
+          <div class="branch-col">
+            <div class="branch-label">Seller: Counter</div>
+            <div class="box db">offer status → 'countered'<br>Create new offer record<br>buyer_is_responding: true<br>48h timer restarts</div>
+            <div class="arrow"></div>
+            <div class="box email">Email buyer:<br>"Seller has countered"</div>
+            <div class="arrow"></div>
+            <div class="box action">Buyer sees counter in dashboard</div>
+            <div class="arrow"></div>
+            <div class="branch">
+              <div class="branch-col">
+                <div class="branch-label">Accept counter</div>
+                <div class="box stripe">Payment flow<br>(same as accept)</div>
+              </div>
+              <div class="branch-col">
+                <div class="branch-label">Counter again</div>
+                <div class="box warn">Loop continues<br>(max 5 rounds)</div>
+              </div>
+              <div class="branch-col">
+                <div class="branch-label">Decline</div>
+                <div class="box reject">offer status → 'declined'<br>Email seller</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="branch-col">
+            <div class="branch-label">Seller: Decline</div>
+            <div class="box db">offer status → 'declined'</div>
+            <div class="arrow"></div>
+            <div class="box email">Email buyer:<br>"Offer declined"</div>
+            <div class="arrow"></div>
+            <div class="box end">Buyer can submit<br>new offer or buy outright</div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flow-wrap" style="margin-top:20px">
+      <div class="flow-title">Offer expiry (automated)</div>
+      <div class="flow">
+        <div class="box start">Offer created with expires_at = now + 48h</div>
+        <div class="arrow"></div>
+        <div class="box action">Cron job / Vercel cron runs every hour<br>or: check expiry lazily on page load</div>
+        <div class="arrow"></div>
+        <div class="box action">Find all pending offers where expires_at &lt; now</div>
+        <div class="arrow"></div>
+        <div class="box db">Set status → 'expired'</div>
+        <div class="arrow"></div>
+        <div class="box email">Email both parties: "Offer expired"</div>
+        <div class="arrow"></div>
+        <div class="box end">Listing returns to fully available state</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Business rules for offers</h3>
+      <table>
+        <tr><th>Rule</th><th>Detail</th></tr>
+        <tr><td>Offer must be below list price</td><td>Enforced server-side — reject if offered_price_pence ≥ listing price</td></tr>
+        <tr><td>One active offer per buyer per listing</td><td>Block new offer if there's already a pending/countered offer for this buyer/listing combo</td></tr>
+        <tr><td>Expiry</td><td>48 hours from creation or last counter — whichever is more recent</td></tr>
+        <tr><td>Max counter rounds</td><td>Recommend 5 total back-and-forths before forcing a decision (prevents indefinite loops)</td></tr>
+        <tr><td>Accepted but not paid</td><td>If buyer doesn't pay within 24h of acceptance, offer auto-expires and listing returns to active</td></tr>
+        <tr><td>5% fee</td><td>Always applied at the <em>agreed</em> price — buyer saves by offering less, seller earns less, platform always takes 5%</td></tr>
+        <tr><td>Workshop can't offer on own listing</td><td>Enforce server-side: buyer_workshop_id ≠ listing.workshop_id</td></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 8. WEBHOOKS -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="webhooks">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>Webhook events to handle</h2>
+      <div class="tag blue">Route: /api/webhooks/stripe</div>
+    </div>
+
+    <div class="callout dark">
+      <strong>All webhooks must be signature-verified first:</strong>
+      Use <span class="mono">stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET)</span> before touching any event data. A missing or invalid signature means the request is not from Stripe — return 400 immediately.
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="webhook-event" style="background:#f8f8f6; padding: 10px 16px;">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#999;min-width:300px;">Event</div>
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#999;">What to do</div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">payment_intent.succeeded</div>
+        <div>
+          <div class="event-desc">A buyer has successfully paid.</div>
+          <div class="event-action">→ Read listing_id &amp; order_qty from metadata. Update order status to 'paid'. Reduce listing quantity. Mark stock sold if qty hits 0. Email seller and buyer.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">payment_intent.payment_failed</div>
+        <div>
+          <div class="event-desc">Card declined or payment failed.</div>
+          <div class="event-action">→ Update order status to 'payment_failed'. Email buyer to retry. If from an offer, mark offer as 'payment_failed' so seller knows to re-offer or relist.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">customer.subscription.created</div>
+        <div>
+          <div class="event-desc">New subscription started (workshop 31+).</div>
+          <div class="event-action">→ Set workshop.subscription_status = 'active'. Save stripe_subscription_id. Grant full access.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">customer.subscription.updated</div>
+        <div>
+          <div class="event-desc">Subscription changed status (e.g. payment failed → past_due).</div>
+          <div class="event-action">→ Sync the new status to workshop.subscription_status. Show appropriate banner in dashboard.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">customer.subscription.deleted</div>
+        <div>
+          <div class="event-desc">Subscription cancelled or not renewed.</div>
+          <div class="event-action">→ Set subscription_status = 'cancelled'. Block marketplace access (but preserve data). Send "we're sorry to see you go" email.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">invoice.payment_failed</div>
+        <div>
+          <div class="event-desc">Monthly subscription payment failed.</div>
+          <div class="event-action">→ Set subscription_status = 'past_due'. Email workshop: "Your payment failed — please update your card." Stripe will retry automatically over the next few days.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">account.updated (Connect)</div>
+        <div>
+          <div class="event-desc">A seller's Express account details changed — most importantly when they finish onboarding.</div>
+          <div class="event-action">→ If event.data.object.charges_enabled === true: set workshop.stripe_onboarding_complete = true. Show "Payments ready" in settings.</div>
+        </div>
+      </div>
+
+      <div class="webhook-event">
+        <div class="event-name">checkout.session.completed</div>
+        <div>
+          <div class="event-desc">Stripe Checkout session finished (subscription or purchase).</div>
+          <div class="event-action">→ Fallback for subscription flow: if mode = 'subscription', retrieve the subscription and update status. Useful if subscription.created fires before your DB is ready.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <strong>Idempotency:</strong> Webhooks can fire more than once for the same event (Stripe retries on failure). Always check if you've already processed an event before acting. For orders, check if <span class="mono">order.status</span> is already 'paid' before updating it again.
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 9. DATABASE CHANGES -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="database">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>Database changes required</h2>
+      <div class="tag blue">New migration files</div>
+    </div>
+
+    <div class="card">
+      <h3>workshops table — new columns (migration 014)</h3>
+      <table>
+        <tr>
+          <th>Column</th><th>Type</th><th>Purpose</th>
+        </tr>
+        <tr>
+          <td class="mono">stripe_customer_id</td>
+          <td><span class="type-badge type-text">text</span></td>
+          <td>Stripe Customer ID (cus_xxx) — used for subscriptions. Null for legacy_free workshops.</td>
+        </tr>
+        <tr>
+          <td class="mono">stripe_account_id</td>
+          <td><span class="type-badge type-text">text</span></td>
+          <td>Stripe Connect Express account ID (acct_xxx) — used to receive payments as a seller.</td>
+        </tr>
+        <tr>
+          <td class="mono">stripe_subscription_id</td>
+          <td><span class="type-badge type-text">text</span></td>
+          <td>Active subscription ID (sub_xxx). Null for legacy_free. Used to manage/cancel subscriptions.</td>
+        </tr>
+        <tr>
+          <td class="mono">subscription_status</td>
+          <td><span class="type-badge type-text">text</span></td>
+          <td>legacy_free / active / trialing / past_due / cancelled / unpaid. Controls marketplace access.</td>
+        </tr>
+        <tr>
+          <td class="mono">stripe_onboarding_complete</td>
+          <td><span class="type-badge type-bool">boolean</span></td>
+          <td>True once seller's Express account has charges_enabled = true. Controls "Buy now" availability on their listings.</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>orders table — new table (migration 015)</h3>
+      <p>Tracks every completed or in-progress purchase transaction.</p>
+      <table>
+        <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+        <tr><td class="mono">id</td><td><span class="type-badge type-uuid">uuid</span></td><td>PK</td></tr>
+        <tr><td class="mono">listing_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → listings</td></tr>
+        <tr><td class="mono">buyer_workshop_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → workshops</td></tr>
+        <tr><td class="mono">seller_workshop_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → workshops</td></tr>
+        <tr><td class="mono">offer_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → offers (null if direct purchase)</td></tr>
+        <tr><td class="mono">quantity</td><td><span class="type-badge type-int">integer</span></td><td>Units purchased</td></tr>
+        <tr><td class="mono">unit_price_pence</td><td><span class="type-badge type-int">integer</span></td><td>Agreed per-unit price (list price or offer price)</td></tr>
+        <tr><td class="mono">total_pence</td><td><span class="type-badge type-int">integer</span></td><td>quantity × unit_price_pence</td></tr>
+        <tr><td class="mono">platform_fee_pence</td><td><span class="type-badge type-int">integer</span></td><td>5% taken by platform</td></tr>
+        <tr><td class="mono">stripe_payment_intent_id</td><td><span class="type-badge type-text">text</span></td><td>For reconciliation and idempotency checks</td></tr>
+        <tr><td class="mono">status</td><td><span class="type-badge type-text">text</span></td><td>payment_pending / paid / payment_failed / refunded / disputed</td></tr>
+        <tr><td class="mono">tracking_number</td><td><span class="type-badge type-text">text</span></td><td>Optional — seller adds when dispatched</td></tr>
+        <tr><td class="mono">tracking_carrier</td><td><span class="type-badge type-text">text</span></td><td>Royal Mail / DPD / Parcelforce / Other</td></tr>
+        <tr><td class="mono">dispatched_at</td><td><span class="type-badge type-ts">timestamptz</span></td><td>When seller marks as dispatched</td></tr>
+        <tr><td class="mono">received_at</td><td><span class="type-badge type-ts">timestamptz</span></td><td>When buyer marks as received</td></tr>
+        <tr><td class="mono">created_at</td><td><span class="type-badge type-ts">timestamptz</span></td><td>default now()</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>offers table — new table (migration 015)</h3>
+      <p>Tracks the full offer and counter-offer negotiation history for each listing.</p>
+      <table>
+        <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+        <tr><td class="mono">id</td><td><span class="type-badge type-uuid">uuid</span></td><td>PK</td></tr>
+        <tr><td class="mono">listing_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → listings</td></tr>
+        <tr><td class="mono">buyer_workshop_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → workshops — workshop making the offer</td></tr>
+        <tr><td class="mono">seller_workshop_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → workshops — denormalised for easy querying</td></tr>
+        <tr><td class="mono">offered_price_pence</td><td><span class="type-badge type-int">integer</span></td><td>The price being offered for this round</td></tr>
+        <tr><td class="mono">quantity</td><td><span class="type-badge type-int">integer</span></td><td>Quantity the buyer wants</td></tr>
+        <tr><td class="mono">initiated_by</td><td><span class="type-badge type-text">text</span></td><td>'buyer' or 'seller' — who made this offer/counter</td></tr>
+        <tr><td class="mono">parent_offer_id</td><td><span class="type-badge type-uuid">uuid</span></td><td>FK → offers — links counter-offers back to the original</td></tr>
+        <tr><td class="mono">round</td><td><span class="type-badge type-int">integer</span></td><td>1 = initial offer, 2 = first counter, etc. Cap at 5.</td></tr>
+        <tr><td class="mono">message</td><td><span class="type-badge type-text">text</span></td><td>Optional note with the offer</td></tr>
+        <tr><td class="mono">status</td><td><span class="type-badge type-text">text</span></td><td>pending / accepted / countered / declined / expired / payment_pending / paid</td></tr>
+        <tr><td class="mono">stripe_payment_intent_id</td><td><span class="type-badge type-text">text</span></td><td>Set when offer is accepted and payment is created</td></tr>
+        <tr><td class="mono">expires_at</td><td><span class="type-badge type-ts">timestamptz</span></td><td>now() + 48h, reset on each counter</td></tr>
+        <tr><td class="mono">created_at</td><td><span class="type-badge type-ts">timestamptz</span></td><td>default now()</td></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 10. ENV VARS -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="env-vars">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2>Environment variables</h2>
+      <div class="tag amber">Add to .env.local + Vercel</div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <tr>
+          <th>Variable</th>
+          <th>Where to find it</th>
+          <th>Notes</th>
+        </tr>
+        <tr>
+          <td class="mono">STRIPE_SECRET_KEY</td>
+          <td>Stripe Dashboard → Developers → API keys</td>
+          <td>Server-only. Use <span class="mono">sk_test_xxx</span> in dev, <span class="mono">sk_live_xxx</span> in production.</td>
+        </tr>
+        <tr>
+          <td class="mono">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</td>
+          <td>Stripe Dashboard → Developers → API keys</td>
+          <td>Client-safe. Used by Stripe.js on the frontend.</td>
+        </tr>
+        <tr>
+          <td class="mono">STRIPE_WEBHOOK_SECRET</td>
+          <td>Stripe Dashboard → Developers → Webhooks → signing secret</td>
+          <td>Different secret for local (stripe CLI) vs production. Never expose this.</td>
+        </tr>
+        <tr>
+          <td class="mono">STRIPE_PRICE_ID</td>
+          <td>Stripe Dashboard → Products → Offcut Challenge Membership → Price ID</td>
+          <td>The price ID for the £29/month recurring subscription (price_xxx).</td>
+        </tr>
+        <tr>
+          <td class="mono">NEXT_PUBLIC_APP_URL</td>
+          <td>Your domain</td>
+          <td>Used for Stripe return URLs and invite links. Set to <span class="mono">https://offcut-challenge.vercel.app</span> in Vercel. Note: this is the app URL, not the business domain — the business domain (offcutchallenge.co.uk) lives in the Stripe dashboard settings only.</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="callout amber">
+      <strong>Local webhook testing:</strong>
+      Install the Stripe CLI (<span class="mono">stripe listen --forward-to localhost:3000/api/webhooks/stripe</span>). This gives you a local signing secret to use in <span class="mono">.env.local</span>. The production signing secret is different — set that separately in Vercel.
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- 11. ROADMAP -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="section" id="roadmap">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <h2>Implementation roadmap</h2>
+      <div class="tag">In order</div>
+    </div>
+
+    <div class="callout green">
+      <strong>Do these in order.</strong> Each step is a working, shippable unit. Don't start step N+1 until step N is tested end-to-end in production with real Stripe test keys.
+    </div>
+
+    <div class="roadmap">
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 1<br>Setup</div>
+        <div class="roadmap-task">
+          Register Stripe account + apply for Connect platform access
+          <p>stripe.com → use <strong>offcutchallenge.co.uk</strong> as business website. Settings → Connect → Get started. Requires business details and bank account. Takes 1–3 days for Connect approval.</p>
+        </div>
+        <div class="roadmap-effort effort-s">Manual</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 2<br>Setup</div>
+        <div class="roadmap-task">
+          Create Stripe product + price for £29/month subscription
+          <p>Stripe Dashboard → Products → Create product "Offcut Challenge Membership" → Add price: £29 recurring monthly. Note the price_xxx ID.</p>
+        </div>
+        <div class="roadmap-effort effort-s">Manual</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 3<br>Database</div>
+        <div class="roadmap-task">
+          Migration 014: Add Stripe columns to workshops
+          <p>stripe_customer_id, stripe_account_id, stripe_subscription_id, subscription_status, stripe_onboarding_complete</p>
+        </div>
+        <div class="roadmap-effort effort-s">Small</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 4<br>Database</div>
+        <div class="roadmap-task">
+          Migration 015: Create orders and offers tables
+          <p>Full schema as documented above. Include RLS policies: workshops can see their own orders and offers only.</p>
+        </div>
+        <div class="roadmap-effort effort-m">Medium</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 5<br>Infra</div>
+        <div class="roadmap-task">
+          Create /api/webhooks/stripe route handler
+          <p>Skeleton first — verify signature, log event type, return 200. Then add handlers one by one as each feature is built.</p>
+        </div>
+        <div class="roadmap-effort effort-s">Small</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 6<br>Feature</div>
+        <div class="roadmap-task">
+          Seller Stripe Express onboarding in Settings
+          <p>Connect button → create Express account → redirect → save account ID → handle account.updated webhook → show connected status.</p>
+        </div>
+        <div class="roadmap-effort effort-m">Medium</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 7<br>Feature</div>
+        <div class="roadmap-task">
+          Subscription flow for workshops 31+
+          <p>Count workshops at signup. If &gt;30: create Stripe Customer → Checkout Session → webhook → set status active → gate routes.</p>
+        </div>
+        <div class="roadmap-effort effort-m">Medium</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 8<br>Feature</div>
+        <div class="roadmap-task">
+          Mark first 30 workshops as legacy_free
+          <p>One-off SQL update on existing workshops. Then add the legacy_free logic to the workshop creation flow going forward.</p>
+        </div>
+        <div class="roadmap-effort effort-s">Small</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 9<br>Feature</div>
+        <div class="roadmap-task">
+          Direct purchase flow (Buy now button)
+          <p>Listing detail page → PaymentIntent → Stripe Checkout → webhook → order created → emails sent. Full end-to-end test with Stripe test cards.</p>
+        </div>
+        <div class="roadmap-effort effort-l">Large</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 10<br>Feature</div>
+        <div class="roadmap-task">
+          Orders page for buyers and sellers
+          <p>/orders — lists all purchases/sales. Shows status, tracking info. Seller can add tracking number and mark as dispatched. Buyer can mark as received.</p>
+        </div>
+        <div class="roadmap-effort effort-m">Medium</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 11<br>Feature</div>
+        <div class="roadmap-task">
+          Offer &amp; counter-offer system
+          <p>Make offer form → offers table → email notifications → seller accept/counter/decline dashboard → payment flow on accept → expiry cron.</p>
+        </div>
+        <div class="roadmap-effort effort-l">Large</div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Step 12<br>Polish</div>
+        <div class="roadmap-task">
+          Subscription management (cancel, update card)
+          <p>Stripe Customer Portal — one link that lets workshops manage their own subscription, update card, cancel. No custom UI needed.</p>
+        </div>
+        <div class="roadmap-effort effort-s">Small</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Offcut Challenge — Stripe Integration Plan · Generated May 2026 · Internal document
+</footer>
+
+</body>
+</html>

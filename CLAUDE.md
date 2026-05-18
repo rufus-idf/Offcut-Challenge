@@ -12,7 +12,8 @@ Currently in active development — soft launch target is 5–10 real workshops.
 - Camera app is a separate purchasable product (see Camera App section) — not included in £29/mo
 
 ## Live URLs
-- Production: https://offcut-challenge.vercel.app
+- Production app: https://offcut-challenge.vercel.app
+- Public-facing domain: https://offcutchallenge.co.uk (marketing, storefront, camera app sales)
 - Supabase project: https://ntrpkwvhnbssnlmorwqv.supabase.co
 - GitHub: https://github.com/rufus-idf/Offcut-Challenge
 - Admin panel: https://offcut-challenge.vercel.app/admin (rufus@i-designfurniture.com only)
@@ -20,7 +21,7 @@ Currently in active development — soft launch target is 5–10 real workshops.
 ## Tech stack
 - Next.js 15 (App Router, TypeScript, Tailwind v4, Turbopack)
 - Supabase (Postgres, Auth, Storage)
-- Stripe (Subscriptions for £29/mo, Connect for marketplace transactions) — not yet built
+- Stripe (Subscriptions for £29/mo, Connect for marketplace transactions, camera app sales) — not yet built
 - Resend (transactional email) — partially integrated
 - Leaflet + OpenStreetMap (workshop map)
 - Postcodes.io (free UK geocoding, no API key needed)
@@ -287,13 +288,26 @@ Once all functionality is in place, do a full design pass:
 
 ### Phase 3 — Stripe payments
 Only start this after Phase 2 is signed off.
-- Register Stripe account and apply for Connect platform access
-- Build separate marketplace/storefront website (separate Next.js repo)
-- Stripe Payment Link on storefront → webhook → invite email via Resend
-- £29/month subscription gate in app
-- Seller Stripe Express onboarding
-- Buy button + PaymentIntent (95/5 split via Connect)
-- Transaction records in DB
+
+**One Stripe account covers everything.** The business is registered under offcutchallenge.co.uk,
+which is the Stripe account's business website. Payments flow to/from the Vercel app via API keys —
+the domain in Stripe settings has no bearing on where webhooks point or where the app lives.
+
+**Stripe account structure:**
+- Business website: https://offcutchallenge.co.uk
+- Marketplace app webhook: https://offcut-challenge.vercel.app/api/webhooks/stripe
+- Storefront webhook (future): https://offcutchallenge.co.uk/api/webhooks/stripe
+- Both webhook endpoints registered in the same Stripe account
+
+**Build order:**
+- Register Stripe account (business website: offcutchallenge.co.uk) + apply for Connect platform access
+- Create £29/month subscription product in Stripe dashboard
+- Seller Stripe Express onboarding (in marketplace app settings)
+- £29/month subscription gate in marketplace app (first 30 workshops free — legacy tier)
+- Buy button + PaymentIntent (95/5 split via Connect) in marketplace app
+- Offers and counter-offers with payment on acceptance
+- Transaction and order records in DB
+- Camera app purchasing via offcutchallenge.co.uk (separate build, same Stripe account)
 
 ### Phase 4 — Responsive web (mobile browser)
 Full mobile layout pass after desktop is stable and payments are live.
@@ -369,7 +383,9 @@ The camera app is a separate purchasable product with two output options:
 1. **Push to Google Sheets** — standalone, no Offcut Challenge subscription needed
 2. **Push to Supabase** — add-on integration, requires Offcut Challenge subscription
 
-Stripe billing for camera app packages to be designed separately.
+Camera app purchases are sold via offcutchallenge.co.uk using the same Stripe account as the
+marketplace. No separate Stripe account needed — just additional products in the dashboard and
+a webhook endpoint on the offcutchallenge.co.uk server when that site is built.
 
 ### What the camera app is
 A Python desktop application (PySide6, Windows EXE) with OpenCV computer vision.
