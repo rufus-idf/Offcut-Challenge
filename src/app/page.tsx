@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Offcut Challenge — The UK marketplace for material offcuts',
+  description: 'A verified B2B marketplace for UK workshops to buy and sell timber, metal, plastic and other material offcuts.',
+}
 
 export default function HomePage() {
   return (
